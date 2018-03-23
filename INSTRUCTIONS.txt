@@ -1,0 +1,44 @@
+truffle init : turns your folder into a truffle environment
+truffle migrate : compiles contracts
+truffle migrate --reset : resets the contract deployment
+
+truffle console
+Also have access to web3 in truffle console
+Can get address of specific contracts using nameOfContract.address
+web3.eth.accounts : gives list of all accounts (can also be seen in Ganache)
+
+you can then access instances of your smart contract: Greetings.deployed().then(function(instance){app=instance;})
+you can then access methods in your smart contract: app.getGreetings.call()
+
+Checking the state of a contract is free
+Change the state of a smart contract: app.setGreetings("Hello Matthew!",{from:web3.eth.accounts[0]})
+
+Exit truffle console: .exit
+
+Ethereum transaction always has four fields:
+1) from
+2) to
+3) value - how much ether should be transferred (can be 0)
+4) data or input - either detail about smart contract function, code or nothing if transfer or value
+
+
+To start a new development enviornment:
+1) Start Ganache
+2) run geth attach http://localhost:8545 in terminal
+3) make sure  you are in your smart contract folder, then run truffle migrate. This deploys the smart contract to your test node.
+
+Debugging:
+Try logging in and out of metamask
+Try metamask->sidebar->settings->reset accounts
+
+
+For the betting contract:
+- truffle console
+- truffle migrate
+- Betting.deployed().then(function(instance){app=instance;})
+- Query number of bets: app.getNumberOfBets()
+- Propose bet: app.proposeBet('{"fixture":{"id":159064,"competitionId":445,"date":"2018-02-10T12:30:00Z","status":"TIMED","matchday":27,"homeTeamName":"Tottenham Hotspur FC","homeTeamId":73,"awayTeamName":"Arsenal FC","awayTeamId":57,"result":{"goalsHomeTeam":null,"goalsAwayTeam":null},"odds":null}}',2,2,1,{from:'0x627306090abaB3A6e1400e9345bC60c78a8BEf57', value: web3.toWei(1, "ether")})
+- Accept bet: app.acceptBet(0,{from:'0x2932b7A2355D6fecc4b5c0B6BD44cC31df247a2e', value: web3.toWei(20, "ether")})
+- Calculate winner: app.calculateWinner(2, '{"fixture":{"id":159064,"competitionId":445,"date":"2018-02-10T12:30:00Z","status":"TIMED","matchday":27,"homeTeamName":"Tottenham Hotspur FC","homeTeamId":73,"awayTeamName":"Arsenal FC","awayTeamId":57,"result":{"goalsHomeTeam":2,"goalsAwayTeam":2},"odds":null}}')
+- Get balance of contract: web3.fromWei( web3.eth.getBalance('0x23e84570f7b28ad0d5e5545d398009194a8734f3').toNumber(), "ether" )
+- To do coverage tests run the following: ./node_modules/.bin/solidity-coverage
