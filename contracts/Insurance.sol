@@ -1,7 +1,7 @@
 pragma solidity ^0.4.15;
 import "../installed_contracts/jsmnsol-lib/contracts/JsmnSolLib.sol";
-/* import "../installed_contracts/bytesutils.sol"; */
-/* import "../installed_contracts/tlsnutils.sol"; */
+import "../installed_contracts/bytesutils.sol";
+import "../installed_contracts/tlsnutils.sol";
 
 contract Insurance {
 
@@ -37,6 +37,7 @@ contract Insurance {
   /***********************************/
 
   event InsuranceCoverChange(uint insuranceID);
+  event MappingChange(uint newValue);
 
   /***********************************/
   /********* PUBLIC FUNCTIONS ********/
@@ -51,24 +52,31 @@ contract Insurance {
   /// @dev                        Allows a user to propose an insurance contract
   /// @param  _hex_proof          The hexidecimal proof passing through the flight ID
   /// @param  _totalCoverAmount   The total cover required by the user
-
-  // API: https://developer.flightstats.com/api-docs/flightstatus/v2/flight
-  // https://api.flightstats.com/flex/flightstatus/rest/v2/json/flight/status/6339?appId=1d47e042&appKey=a5bfe2a25a15f05db1588084ea256477
-
   function proposeInsuranceCover(bytes memory _hex_proof, uint _totalCoverAmount) public payable {
     require(msg.value > 0);
 
+    // Verify the TLS-N Proof
+    uint256 qx = 0x0de2583dc1b70c4d17936f6ca4d2a07aa2aba06b76a97e60e62af286adc1cc09; //public key x-coordinate signer
+    uint256 qy = 0x68ba8822c94e79903406a002f4bc6a982d1b473f109debb2aa020c66f642144a; //public key y-coordinate signer
+    require(tlsnutils.verifyProof(_hex_proof, qx, qy));
+
     // Parse the response body of the TLS-N proof
-    /* string memory body = string(tlsnutils.getHTTPBody(_hex_proof));
+    string memory body = string(tlsnutils.getHTTPBody(_hex_proof));
     JsmnSolLib.Token[] memory tokens;
     uint returnValue;
     uint actualNum;
-    (returnValue, tokens, actualNum) = JsmnSolLib.parse(body, 100); */
+    (returnValue, tokens, actualNum) = JsmnSolLib.parse(body, 300);
 
     // Check that the flight has not already occurred
+    // Flight status has to be 'S' for 'scheduled'
+    string memory status = JsmnSolLib.getBytes(body, tokens[178].start, tokens[178].end);
+    /* require(compareStrings(status,'S')); */
+
+    // Then get the flight ID
+    string memory flightIDString = JsmnSolLib.getBytes(body, tokens[6].start, tokens[6].end);
+    int flightID = JsmnSolLib.parseInt(flightIDString);
 
     // Enter all flight details and create insurance contract
-    int flightID = 669; // Need to change this when parsing
     uint insuranceID = (insuranceCoverCount++)+1000;
     insuranceIDs.push(insuranceID);
     InsuranceCover memory newContract;
@@ -100,23 +108,20 @@ contract Insurance {
     allInsuranceCovers[_insuranceID].currentFundedCover = allInsuranceCovers[_insuranceID].currentFundedCover + msg.value;
 
     // Add acceptor to the contractProvider mapping
-    addProvider(_insuranceID, msg.sender, msg.value);
+    allInsuranceCovers[_insuranceID].coverProviders[msg.sender] = msg.value;
+
     allInsuranceCovers[_insuranceID].numberOfProviders++;
     InsuranceCoverChange(_insuranceID);
+    MappingChange(allInsuranceCovers[_insuranceID].coverProviders[msg.sender]);
  }
 
- function addProvider(uint _insuranceID, address provider, uint value) private {
-   allInsuranceCovers[_insuranceID].coverProviders[provider] = value;
- }
-
-/*
   /// @dev                    Calculates the outcome of an insurance contract
   /// @param  _insuranceID    The insurance ID that is being used
   /// @param  _hex_proof      The proof with the details of the flight
   function resolveContract(uint _insuranceID, bytes memory _hex_proof) public payable {
 
    // Parse the response body of the TLS-N proof
-   /* string memory body = string(tlsnutils.getHTTPBody(_hex_proof));
+   string memory body = string(tlsnutils.getHTTPBody(_hex_proof));
    JsmnSolLib.Token[] memory tokens;
    uint returnValue;
    uint actualNum;
@@ -126,7 +131,8 @@ contract Insurance {
 
    // If the flight was cancelled pay out the funds to the proposer
    // Also pay the premium to the contributors
-   if (flightCancelled) {
+   // Flight status has to be 'C' for 'cancelled'
+   /* if (flightCancelled) {
     allInsuranceCovers[_insuranceID].proposer.transfer(allInsuranceCovers[_insuranceID].totalCoverAmount);
     for (uint i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders -1; i++) {
       premiumTransfer = (allInsuranceCovers[_insuranceID].coverAmounts[i] / allInsuranceCovers[_insuranceID].totalCoverAmount) * allInsuranceCovers[_insuranceID].premiumAmount;
@@ -139,9 +145,8 @@ contract Insurance {
         premiumTransfer = (allInsuranceCovers[_insuranceID].coverAmounts[j] / allInsuranceCovers[_insuranceID].totalCoverAmount) * allInsuranceCovers[_insuranceID].premiumAmount;
         allInsuranceCovers[_insuranceID].coverProviders[j].transfer(premiumTransfer + allInsuranceCovers[_insuranceID].coverAmounts[j]);
       }
-    }
+    /* } */
   }
-  */
 
   // @dev                   allows user to cancel a proposed insurance contract, insuranceID is deleted and
   //                        contract funds transfered to the proposer and
@@ -179,17 +184,16 @@ contract Insurance {
     return insuranceIDs.length;
   }
 
-  /// @dev       Compares two strings
-  /// @param  a  The first string to be compared
-  /// @param  b  The second string to be compared
-  /// @return    Returns true if two strings are the same, false otherwise
-  function compareStrings (string a, string b) public returns (bool){
-    return keccak256(a) == keccak256(b);
-   }
-
   /***********************************/
   /******** PRIVATE FUNCTIONS ********/
   /***********************************/
 
+  /// @dev       Compares two strings
+  /// @param  a  The first string to be compared
+  /// @param  b  The second string to be compared
+  /// @return    Returns true if two strings are the same, false otherwise
+  function compareStrings (string a, string b) private returns (bool){
+    return keccak256(a) == keccak256(b);
+   }
 
 }
