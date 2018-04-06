@@ -1,5 +1,5 @@
 import binascii
-filename = 'future-flight-ASCII.proof'
+filename = 'non-cancelled-flight-ASCII.proof'
 with open(filename, 'rb') as f:
     content = f.read()
 print("file read")
