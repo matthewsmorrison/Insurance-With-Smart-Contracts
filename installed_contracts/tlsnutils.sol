@@ -121,96 +121,96 @@ library tlsnutils{
    * @param proof The proof.
    * @return True iff valid.
   */
-function verifyProof(bytes memory proof) returns(bool) {
-	uint256 qx = 0x0de2583dc1b70c4d17936f6ca4d2a07aa2aba06b76a97e60e62af286adc1cc09; //public key x-coordinate signer
-	uint256 qy = 0x68ba8822c94e79903406a002f4bc6a982d1b473f109debb2aa020c66f642144a; //public key y-coordinate signer
-	return verifyProof(proof, qx, qy);
-}
+  function verifyProof(bytes memory proof) returns(bool) {
+  	uint256 qx = 0x0de2583dc1b70c4d17936f6ca4d2a07aa2aba06b76a97e60e62af286adc1cc09; //public key x-coordinate signer
+  	uint256 qy = 0x68ba8822c94e79903406a002f4bc6a982d1b473f109debb2aa020c66f642144a; //public key y-coordinate signer
+  	return verifyProof(proof, qx, qy);
+  }
 
   /*
    * @dev Verify a proof signed by the specified key.
    * @param proof The proof.
    * @return True iff valid.
   */
-function verifyProof(bytes memory proof, uint256 qx, uint256 qy) returns(bool) {
-	bytes32 m; // Evidence Hash in bytes32
-	uint256 e; // Evidence Hash in uint256
-	uint256 sig_r; //signature parameter
-	uint256 sig_s; //signature parameter
+  function verifyProof(bytes memory proof, uint256 qx, uint256 qy) returns(bool) {
+  	bytes32 m; // Evidence Hash in bytes32
+  	uint256 e; // Evidence Hash in uint256
+  	uint256 sig_r; //signature parameter
+  	uint256 sig_s; //signature parameter
 
-	// Returns ECC signature parts and the evidence hash
-	(sig_r, sig_s, m) = parseProof(proof);
+  	// Returns ECC signature parts and the evidence hash
+  	(sig_r, sig_s, m) = parseProof(proof);
 
-	// Convert evidence hash to uint
-	e = uint256(m);
+  	// Convert evidence hash to uint
+  	e = uint256(m);
 
-	// Verify signature
-	return ECMath.ecdsaverify(qx, qy, e, sig_r, sig_s);
+  	// Verify signature
+  	return ECMath.ecdsaverify(qx, qy, e, sig_r, sig_s);
 
-}
+  }
 
   /*
    * @dev Parses the provided proof and returns the signature parts and the evidence hash.
- * For 64-byte ECC proofs with SHA256.
+   * For 64-byte ECC proofs with SHA256.
    * @param proof The proof.
    * @return sig_r, sig_s: signature parts and hashchain: the final evidence hash.
   */
-function parseProof(bytes memory proof) returns(uint256 sig_r, uint256 sig_s, bytes32 hashchain) {
+  function parseProof(bytes memory proof) returns(uint256 sig_r, uint256 sig_s, bytes32 hashchain) {
 
-    uint16 readPos = 0; // Initialize index in proof bytes array
-    bytes16 times; // Contains Timestamps for signature validation
-  bytes2 len_record; // Length of the record
-  bytes1 generator_originated; // Boolean whether originated by generator
-  bytes memory chunk; // One chunk for hashing
-  bytes16 saltsecret; // Salt secret from proof
+      uint16 readPos = 0; // Initialize index in proof bytes array
+      bytes16 times; // Contains Timestamps for signature validation
+    bytes2 len_record; // Length of the record
+    bytes1 generator_originated; // Boolean whether originated by generator
+    bytes memory chunk; // One chunk for hashing
+    bytes16 saltsecret; // Salt secret from proof
 
-    // Parse times
+      // Parse times
+      assembly {
+        times := mload(add(proof, 40))
+      }
+      readPos += 32; //update readPos, skip parameters
+
     assembly {
-      times := mload(add(proof, 40))
+        sig_r := mload(add(proof,64))
+        sig_s := mload(add(proof,96))
+      readPos := add(readPos, 64)
     }
-    readPos += 32; //update readPos, skip parameters
 
-  assembly {
-      sig_r := mload(add(proof,64))
-      sig_s := mload(add(proof,96))
-    readPos := add(readPos, 64)
+      // Skipping the certificate chain
+      readPos += uint16(proof[26])+256*uint16(proof[27]);
+
+      // Parse one record after another ( i < num_proof_nodes )
+    for(uint16 i = 0; i < uint16(proof[6])+256*uint16(proof[7]); i++){
+  		// Get the Record length as a byte array
+  		assembly { len_record := mload(add(proof,add(readPos,33))) }
+  		// Convert the record length into a number
+  		uint16 tmplen = uint16(len_record[0])+256*uint16(len_record[1]);
+  		// Parse generator information
+  		generator_originated = proof[readPos+3];
+  		// Update readPos
+  		readPos += 4;
+  		// Set chunk pointer
+  		assembly { chunk := add(proof,readPos) }
+  		// Set length of chunks
+  		assembly { mstore(chunk, tmplen) }
+  		// Load saltsecret
+  		assembly { saltsecret := mload(add(proof,add(readPos,add(tmplen,32)))) }
+  		// Root hash
+  		bytes32 hash = sha256(saltsecret,chunk,uint8(0),len_record,generator_originated);
+  		// Hash chain
+  		if(i == 0){
+  			hashchain = sha256(uint8(1),hash);
+  		}else{
+  			hashchain = sha256(uint8(1),hashchain,hash);
+  		}
+  		// Jump over record and salt secret
+  		readPos += tmplen + 16;
+  	}
+  	// Compute Evidence Hash
+  	// Load chunk size and salt size
+  	bytes4 test; // Temporarily contains salt size and chunk size
+  	assembly { test := mload(add(proof,34)) }
+  	// Compute final hash chain
+  	hashchain = sha256(hashchain, times, test, 0x04000000);
+    }
   }
-
-    // Skipping the certificate chain
-    readPos += uint16(proof[26])+256*uint16(proof[27]);
-
-    // Parse one record after another ( i < num_proof_nodes )
-  for(uint16 i = 0; i < uint16(proof[6])+256*uint16(proof[7]); i++){
-		// Get the Record length as a byte array
-		assembly { len_record := mload(add(proof,add(readPos,33))) }
-		// Convert the record length into a number
-		uint16 tmplen = uint16(len_record[0])+256*uint16(len_record[1]);
-		// Parse generator information
-		generator_originated = proof[readPos+3];
-		// Update readPos
-		readPos += 4;
-		// Set chunk pointer
-		assembly { chunk := add(proof,readPos) }
-		// Set length of chunks
-		assembly { mstore(chunk, tmplen) }
-		// Load saltsecret
-		assembly { saltsecret := mload(add(proof,add(readPos,add(tmplen,32)))) }
-		// Root hash
-		bytes32 hash = sha256(saltsecret,chunk,uint8(0),len_record,generator_originated);
-		// Hash chain
-		if(i == 0){
-			hashchain = sha256(uint8(1),hash);
-		}else{
-			hashchain = sha256(uint8(1),hashchain,hash);
-		}
-		// Jump over record and salt secret
-		readPos += tmplen + 16;
-	}
-	// Compute Evidence Hash
-	// Load chunk size and salt size
-	bytes4 test; // Temporarily contains salt size and chunk size
-	assembly { test := mload(add(proof,34)) }
-	// Compute final hash chain
-	hashchain = sha256(hashchain, times, test, 0x04000000);
-  }
-}

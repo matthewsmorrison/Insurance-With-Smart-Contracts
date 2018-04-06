@@ -83,12 +83,14 @@ contract('Insurance', function(accounts, app) {
       insuranceID = contracts[0].toNumber();
       app.acceptContract(insuranceID, {from: acceptor, value: acceptorAmount})
     }).then(function(){
-      assert.equal(insuranceID,1000,"the insurance ID is not correct")
+      assert.equal(insuranceID,1000,"the insurance ID is not correct");
       return app.allInsuranceCovers(insuranceID);
     }).then(function(contract){
       assert.equal(contract[2].toNumber(), 1, "the number of providers has not been incremented");
       assert.equal(contract[4].toNumber(), acceptorAmount, "the contract has recorded the right amount of capital");
-      assert.equal(contract[9][acceptor],acceptorAmount, "the acceptor address has not been added to the contract")
+      return app.getProviderAmount.call(insuranceID, acceptor);
+    }).then(function(providerAmount){
+      assert.equal(providerAmount,acceptorAmount, "the acceptor address has not been added to the contract");
     })
   });
 

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 import "../installed_contracts/jsmnsol-lib/contracts/JsmnSolLib.sol";
 import "../installed_contracts/bytesutils.sol";
 import "../installed_contracts/tlsnutils.sol";
@@ -182,6 +182,10 @@ contract Insurance {
   /// @return                 Returns an integer of the number of contracts
   function getNumberOfInsuranceContracts() public constant returns (uint) {
     return insuranceIDs.length;
+  }
+
+  function getProviderAmount(uint _insuranceID, address _provider) public returns(uint){
+    return allInsuranceCovers[_insuranceID].coverProviders[_provider];
   }
 
   /***********************************/
