@@ -38,10 +38,6 @@ contract Insurance {
   /***********************************/
 
   event InsuranceCoverChange(uint insuranceID);
-  event MappingChange(uint newValue);
-  event Status(string status);
-  event FlightID(int id);
-  event Proof(bool pass);
 
   /***********************************/
   /********* PUBLIC FUNCTIONS ********/
@@ -106,7 +102,7 @@ contract Insurance {
   /// @param  _insuranceID  The insurance ID that the user is accepting
   function acceptContract(uint _insuranceID) public payable {
     require(msg.value > 0);
-    require(allInsuranceCovers[_insuranceID].currentFundedCover < allInsuranceCovers[_insuranceID].totalCoverAmount);
+    require(!allInsuranceCovers[_insuranceID].filled);
     require((allInsuranceCovers[_insuranceID].currentFundedCover + msg.value) <= allInsuranceCovers[_insuranceID].totalCoverAmount);
 
     allInsuranceCovers[_insuranceID].currentFundedCover = allInsuranceCovers[_insuranceID].currentFundedCover + msg.value;
@@ -119,7 +115,6 @@ contract Insurance {
     allInsuranceCovers[_insuranceID].contributions.push(msg.value);
     allInsuranceCovers[_insuranceID].numberOfProviders++;
     InsuranceCoverChange(_insuranceID);
-    MappingChange(allInsuranceCovers[_insuranceID].contributions[0]);
  }
 
   /// @dev                    Calculates the outcome of an insurance contract
@@ -127,9 +122,7 @@ contract Insurance {
   /// @param  _hex_proof      The proof with the details of the flight
   function resolveContract(uint _insuranceID, bytes memory _hex_proof) public payable {
     // Verify the TLS-N Proof
-    uint256 qx = 0x0de2583dc1b70c4d17936f6ca4d2a07aa2aba06b76a97e60e62af286adc1cc09; //public key x-coordinate signer
-    uint256 qy = 0x68ba8822c94e79903406a002f4bc6a982d1b473f109debb2aa020c66f642144a; //public key y-coordinate signer
-    /* require(tlsnutils.verifyProof(_hex_proof, qx, qy)); */
+    require(tlsnutils.verifyProof(_hex_proof));
 
     // Parse the response body of the TLS-N proof
     string memory body = string(tlsnutils.getHTTPBody(_hex_proof));
@@ -139,39 +132,54 @@ contract Insurance {
     (returnValue, tokens, actualNum) = JsmnSolLib.parse(body, 500);
 
     // First check that the flight IDs are the same
-    string memory flightIDString = JsmnSolLib.getBytes(body, tokens[6].start, tokens[6].end);
-    int flightID = JsmnSolLib.parseInt(flightIDString);
-    FlightID(flightID);
-    require(flightID == allInsuranceCovers[_insuranceID].flightID);
+    int temp = getFlightID(body, tokens);
+    // Add this back in once testing is finished
+    /* require(flightID == allInsuranceCovers[_insuranceID].flightID); */
 
-    // Now check the status of the flight
-    // Flight status has to be 'C' for 'cancelled'
-    string memory status = JsmnSolLib.getBytes(body, tokens[178].start, tokens[178].end);
-    Status(status);
-    require(!compareStrings(status,'S'));
+    // Check the status
+    temp = getStatus(body, tokens);
+    require(temp != 1);
 
     // If the flight was cancelled pay out the funds to the proposer
     // Also pay the premium to the contributors
     // Flight status has to be 'C' for 'cancelled'
-
-    /* uint premiumTransfer;
-    if (compareStrings(status,'C')) {
+    if (temp == 2) {
       allInsuranceCovers[_insuranceID].proposer.transfer(allInsuranceCovers[_insuranceID].totalCoverAmount);
       for (uint i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders -1; i++) {
-        premiumTransfer = (allInsuranceCovers[_insuranceID].contributions[i] / allInsuranceCovers[_insuranceID].totalCoverAmount) * allInsuranceCovers[_insuranceID].premiumAmount;
-        allInsuranceCovers[_insuranceID].contributors[i].transfer(premiumTransfer);
+        allInsuranceCovers[_insuranceID].contributors[i].transfer((allInsuranceCovers[_insuranceID].contributions[i] / allInsuranceCovers[_insuranceID].totalCoverAmount) * allInsuranceCovers[_insuranceID].premiumAmount);
       }
     }
 
     else {
       for (uint j=0; j< allInsuranceCovers[_insuranceID].numberOfProviders -1; j++) {
-        premiumTransfer = (allInsuranceCovers[_insuranceID].contributions[j] / allInsuranceCovers[_insuranceID].totalCoverAmount) * allInsuranceCovers[_insuranceID].premiumAmount;
-        allInsuranceCovers[_insuranceID].contributors[j].transfer(premiumTransfer + allInsuranceCovers[_insuranceID].contributions[j]);
+        allInsuranceCovers[_insuranceID].contributors[j].transfer(((allInsuranceCovers[_insuranceID].contributions[j] / allInsuranceCovers[_insuranceID].totalCoverAmount) * allInsuranceCovers[_insuranceID].premiumAmount) + allInsuranceCovers[_insuranceID].contributions[j]);
       }
-    } */
-
+    }
     allInsuranceCovers[_insuranceID].deleted = true;
+  }
 
+  /// @dev                    Returns the status for the cancelling contract function
+  /// @param  body            The body of the TLS-N proof
+  /// @param  tokens          Tokens from the JsmnSolLib
+  /// @return                 An integer corresponding to the status
+  function getStatus(string body, JsmnSolLib.Token[] memory tokens) private returns(int) {
+    // Flight status has to be 'C' for 'cancelled'
+    string memory status;
+    status = JsmnSolLib.getBytes(body, tokens[178].start, tokens[178].end);
+    if (compareStrings(status,'S')) return 1;
+    status = JsmnSolLib.getBytes(body, tokens[167].start, tokens[167].end);
+    if (compareStrings(status,'C')) return 2;
+    else return 3;
+  }
+
+  /// @dev                    Returns the flightID for the cancelling contract function
+  /// @param  body            The body of the TLS-N proof
+  /// @param  tokens          Tokens from the JsmnSolLib
+  /// @return                 An integer corresponding to the flight ID
+  function getFlightID(string body, JsmnSolLib.Token[] memory tokens) private returns(int) {
+    string memory flightIDString = JsmnSolLib.getBytes(body, tokens[6].start, tokens[6].end);
+    int flightID = JsmnSolLib.parseInt(flightIDString);
+    return flightID;
   }
 
   // @dev                   allows user to cancel a proposed insurance contract, insuranceID is deleted and
@@ -183,7 +191,9 @@ contract Insurance {
       allInsuranceCovers[_insuranceID].deleted = true;
       InsuranceCoverChange(_insuranceID);
       allInsuranceCovers[_insuranceID].proposer.transfer(allInsuranceCovers[_insuranceID].premiumAmount);
-      // Also need to return all funds to the acceptors - need to sort out mapping first
+      for (uint i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders -1; i++) {
+        allInsuranceCovers[_insuranceID].contributors[i].transfer(allInsuranceCovers[_insuranceID].contributions[i]);
+      }
   }
 
  /// @dev                    Returns details of a specific insurance contract
@@ -208,10 +218,6 @@ contract Insurance {
   /// @return                 Returns an integer of the number of contracts
   function getNumberOfInsuranceContracts() public constant returns (uint) {
     return insuranceIDs.length;
-  }
-
-  function getProviderAmount(uint _insuranceID, address _provider) public returns(uint){
-    return allInsuranceCovers[_insuranceID].coverProviders[_provider];
   }
 
   /***********************************/
