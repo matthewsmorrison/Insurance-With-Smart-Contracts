@@ -143,16 +143,24 @@ contract Insurance {
     // If the flight was cancelled pay out the funds to the proposer
     // Also pay the premium to the contributors
     // Flight status has to be 'C' for 'cancelled'
-    if (temp == 2) {
+    uint i;
+    if (temp == 2 && allInsuranceCovers[_insuranceID].filled) {
       allInsuranceCovers[_insuranceID].proposer.transfer(allInsuranceCovers[_insuranceID].totalCoverAmount);
-      for (uint i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders -1; i++) {
+      for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders -1; i++) {
         allInsuranceCovers[_insuranceID].contributors[i].transfer((allInsuranceCovers[_insuranceID].contributions[i] / allInsuranceCovers[_insuranceID].totalCoverAmount) * allInsuranceCovers[_insuranceID].premiumAmount);
       }
     }
 
+    else if (!allInsuranceCovers[_insuranceID].filled) {
+      allInsuranceCovers[_insuranceID].proposer.transfer(allInsuranceCovers[_insuranceID].premiumAmount);
+      for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders -1; i++) {
+        allInsuranceCovers[_insuranceID].contributors[i].transfer(allInsuranceCovers[_insuranceID].contributions[i]);
+      }
+    }
+
     else {
-      for (uint j=0; j< allInsuranceCovers[_insuranceID].numberOfProviders -1; j++) {
-        allInsuranceCovers[_insuranceID].contributors[j].transfer(((allInsuranceCovers[_insuranceID].contributions[j] / allInsuranceCovers[_insuranceID].totalCoverAmount) * allInsuranceCovers[_insuranceID].premiumAmount) + allInsuranceCovers[_insuranceID].contributions[j]);
+      for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders -1; i++) {
+        allInsuranceCovers[_insuranceID].contributors[i].transfer(((allInsuranceCovers[_insuranceID].contributions[i] / allInsuranceCovers[_insuranceID].totalCoverAmount) * allInsuranceCovers[_insuranceID].premiumAmount) + allInsuranceCovers[_insuranceID].contributions[i]);
       }
     }
     allInsuranceCovers[_insuranceID].deleted = true;
