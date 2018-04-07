@@ -61,7 +61,7 @@ class InsurancePolicyCreator extends Component {
 		<p>Create a new insurance policy here  </p>
 		<div style={{display:"inline-block"}}>
 		<p>I want to be covered to the sum of:</p>
-		<input onChange={(e) => {} }></input>
+		<input onChange={(e) => {this.setState()} }></input>
 		<p>I will pay a premium of:</p>
 		<input></input>
 		<button style={{display:"block"}} onClick={() => this.props.addInsurance()}>Add Insurance Policy</button>
