@@ -7,3 +7,6 @@ module.exports = {
     }
   }
 };
+
+require('babel-register');
+require('babel-polyfill');
