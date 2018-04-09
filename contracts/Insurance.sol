@@ -115,7 +115,7 @@ contract Insurance {
     allInsuranceCovers[_insuranceID].contributions.push(msg.value);
     allInsuranceCovers[_insuranceID].numberOfProviders++;
     InsuranceCoverChange(_insuranceID);
- }
+  }
 
   /// @dev                    Calculates the outcome of an insurance contract
   /// @param  _insuranceID    The insurance ID that is being used
@@ -204,17 +204,17 @@ contract Insurance {
       }
   }
 
- /// @dev                    Returns details of a specific insurance contract
- /// @param  _insuranceID    The insurance ID that you are requesting
- /// @return                 1. proposer address, 2. total cover amount, 3. current funded cover,
- ///                         4. premium amount, 5. the flight ID
- function getInsuranceContract(uint _insuranceID) public constant returns (address, uint, uint, uint, int) {
-  return  (allInsuranceCovers[_insuranceID].proposer,
-           allInsuranceCovers[_insuranceID].totalCoverAmount,
-           allInsuranceCovers[_insuranceID].currentFundedCover,
-           allInsuranceCovers[_insuranceID].premiumAmount,
-           allInsuranceCovers[_insuranceID].flightID);
- }
+  /// @dev                    Returns details of a specific insurance contract
+  /// @param  _insuranceID    The insurance ID that you are requesting
+  /// @return                 1. proposer address, 2. total cover amount, 3. current funded cover,
+  ///                         4. premium amount, 5. the flight ID
+  function getInsuranceContract(uint _insuranceID) public constant returns (address, uint, uint, uint, int) {
+    return  (allInsuranceCovers[_insuranceID].proposer,
+             allInsuranceCovers[_insuranceID].totalCoverAmount,
+             allInsuranceCovers[_insuranceID].currentFundedCover,
+             allInsuranceCovers[_insuranceID].premiumAmount,
+             allInsuranceCovers[_insuranceID].flightID);
+  }
 
   /// @dev                    Returns an array of all insurance IDs
   /// @return                 All insurance IDs that have ever been created
@@ -240,4 +240,11 @@ contract Insurance {
     return keccak256(a) == keccak256(b);
    }
 
+  function getInsuranceContributers(uint _insuranceID) public constant returns(address[]) {
+    return allInsuranceCovers[_insuranceID].contributors;
+  }
+
+  function getInsuranceContributions(uint _insuranceID) public constant returns(uint[]) {
+    return allInsuranceCovers[_insuranceID].contributions;
+  }
 }
