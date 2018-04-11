@@ -240,7 +240,7 @@ contract Insurance {
     return keccak256(a) == keccak256(b);
    }
 
-  function getInsuranceContributers(uint _insuranceID) public constant returns(address[]) {
+  function getInsuranceContributors(uint _insuranceID) public constant returns(address[]) {
     return allInsuranceCovers[_insuranceID].contributors;
   }
 

@@ -30,7 +30,7 @@ class InsurancePolicyView extends Component {
 	super(props)
     }
     render() {
-	return ( <p> Insurance policy: {this.props.insurance.id} {this.props.actionComponent(this.props.insurance)}</p> )
+	return ( <p> Insurance policy: {this.props.insurance.id} with cover {this.props.insurance.totalCoverAmount} and premium {this.props.insurance.premium} {this.props.actionComponent(this.props.insurance)}</p> )
     }
 }
 
@@ -55,16 +55,31 @@ class InsurancePolicyCreator extends Component {
 	super(props)
 	this.state = {premium:0, cover:0}
     }
+    setCover(cover) {
+	cover = parseFloat(cover)
+	console.log(cover)
+	if (cover) {
+	    this.setState({cover:cover})
+	}
+    }
+    setPremium(premium) {
+	premium = parseFloat(premium)
+	if (premium) {
+	    this.setState({premium:premium})
+	}
+    }
     render() {
 	return (
 		<div>
 		<p>Create a new insurance policy here  </p>
 		<div style={{display:"inline-block"}}>
 		<p>I want to be covered to the sum of:</p>
-		<input onChange={(e) => {} }></input>
+		<input style={{width:"120px", margin:"0px 20px 0px 0px"}} onChange={(e) => {this.setCover(e.target.value)} }></input>
+		<p style={{display:"inline-block"}}>{this.state.cover}</p>
 		<p>I will pay a premium of:</p>
-		<input></input>
-		<button style={{display:"block"}} onClick={() => this.props.addInsurance()}>Add Insurance Policy</button>
+		<input style={{width:"120px", margin:"0px 20px 0px 0px"}} onChange={(e) => {this.setPremium(e.target.value)} }></input>
+		<p style={{display:"inline-block"}}>{this.state.premium}</p>
+		<button style={{display:"block"}} onClick={() => this.props.addInsurance(this.state.premium, this.state.cover)}>Add Insurance Policy</button>
 		</div>
 	    </div>
 	)
@@ -176,10 +191,10 @@ class App extends Component {
     }
 
 
-    async addNewInsurance() {
+    async addNewInsurance(premium, cover) {
 	console.log("adding new insurance");
-	var totalCoverAmount = this.state.web3.toWei(1, "ether")
-	var premiumAmount = this.state.web3.toWei(0.1, "ether")
+	var totalCoverAmount = this.state.web3.toWei(cover, "ether")
+	var premiumAmount = this.state.web3.toWei(premium, "ether")
 	var proposer = this.currAccount
 	this.insuranceContractInst.proposeInsuranceCover(flightProof, totalCoverAmount, {from: proposer, value: premiumAmount});
     }
