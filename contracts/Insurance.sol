@@ -38,7 +38,7 @@ contract Insurance {
   /***********************************/
 
   event InsuranceCoverChange(uint insuranceID);
-
+  event Status(uint status);
   /***********************************/
   /********* PUBLIC FUNCTIONS ********/
   /***********************************/
@@ -122,6 +122,7 @@ contract Insurance {
   /// @param  _hex_proof      The proof with the details of the flight
   function resolveContract(uint _insuranceID, bytes memory _hex_proof) public payable {
     // Verify the TLS-N Proof
+    require(allInsuranceCovers[_insuranceID].filled);
     require(tlsnutils.verifyProof(_hex_proof));
 
     // Parse the response body of the TLS-N proof
@@ -143,22 +144,26 @@ contract Insurance {
     // If the flight was cancelled pay out the funds to the proposer
     // Also pay the premium to the contributors
     // Flight status has to be 'C' for 'cancelled'
+
     uint i;
-    if (temp == 2 && allInsuranceCovers[_insuranceID].filled) {
-      allInsuranceCovers[_insuranceID].proposer.transfer(allInsuranceCovers[_insuranceID].totalCoverAmount);
-      for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders; i++) {
-        allInsuranceCovers[_insuranceID].contributors[i].transfer((allInsuranceCovers[_insuranceID].contributions[i] / allInsuranceCovers[_insuranceID].totalCoverAmount) * allInsuranceCovers[_insuranceID].premiumAmount);
-      }
-    }
-    else if (!allInsuranceCovers[_insuranceID].filled) {
+    /* if (!allInsuranceCovers[_insuranceID].filled) {
+      // contract did not have enough contributions
       allInsuranceCovers[_insuranceID].proposer.transfer(allInsuranceCovers[_insuranceID].premiumAmount);
       for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders; i++) {
         allInsuranceCovers[_insuranceID].contributors[i].transfer(allInsuranceCovers[_insuranceID].contributions[i]);
       }
+    } */
+    if (temp == 2 && allInsuranceCovers[_insuranceID].filled) {
+      // the flight was cancelled
+      allInsuranceCovers[_insuranceID].proposer.transfer(allInsuranceCovers[_insuranceID].totalCoverAmount);
+      for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders; i++) {
+        allInsuranceCovers[_insuranceID].contributors[i].transfer((allInsuranceCovers[_insuranceID].contributions[i] * allInsuranceCovers[_insuranceID].premiumAmount) / allInsuranceCovers[_insuranceID].totalCoverAmount);
+      }
     }
     else {
+      // the flight was not cancelled
       for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders; i++) {
-        allInsuranceCovers[_insuranceID].contributors[i].transfer(((allInsuranceCovers[_insuranceID].contributions[i] / allInsuranceCovers[_insuranceID].totalCoverAmount) * allInsuranceCovers[_insuranceID].premiumAmount) + allInsuranceCovers[_insuranceID].contributions[i]);
+        allInsuranceCovers[_insuranceID].contributors[i].transfer(((allInsuranceCovers[_insuranceID].contributions[i] * allInsuranceCovers[_insuranceID].premiumAmount) / allInsuranceCovers[_insuranceID].totalCoverAmount) + allInsuranceCovers[_insuranceID].contributions[i]);
       }
     }
     allInsuranceCovers[_insuranceID].deleted = true;
