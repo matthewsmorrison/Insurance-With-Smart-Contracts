@@ -1,5 +1,5 @@
 import binascii
-filename = 'non-cancelled-flight-ASCII.proof'
+filename = 'proofs/.proof'
 with open(filename, 'rb') as f:
     content = f.read()
 print("file read")
