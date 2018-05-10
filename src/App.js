@@ -57,7 +57,6 @@ class InsurancePolicyCreator extends Component {
     }
     setCover(cover) {
 	cover = parseFloat(cover)
-	console.log(cover)
 	if (cover) {
 	    this.setState({cover:cover})
 	}
@@ -155,6 +154,7 @@ class App extends Component {
     async getAllInsurances() {
 	console.log("got all insurances");
 	var insuranceIds = await this.insuranceContractInst.getInsuranceContracts()
+	console.log(insuranceIds);
 	var userFilledInsurances = []
 	var userUnfilledInsurances = []
 	var availableInsurances = []
@@ -302,9 +302,9 @@ export default App
 
 /*
 Plan:
-- Make the 3 lists
-- Improve the creator and corresponding bet descr - need cover amount and premium
-- Need more lists to keep tracks of user investements
+- Improve the creator and corresponding bet descr (Styling)
+- Need to make the API calls
+- Search fields for API
 - Need list for insurances you have invested in that are filled
-- Improve the look of bets
+- Show how much is invested per isnurance
 */
