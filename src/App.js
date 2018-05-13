@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import Insurance from '../build/contracts/Insurance.json'
 import getWeb3 from './utils/getWeb3'
+import * as flights from './flights.js'
 
 import './css/oswald.css'
 import './css/open-sans.css'
@@ -30,20 +31,39 @@ class InsurancePolicyView extends Component {
 	super(props)
     }
     render() {
-	return ( <div> Insurance policy: {this.props.insurance.id} with cover {this.props.insurance.totalCoverAmount} and premium {this.props.insurance.premium} <this.props.actionComponent insurance={this.props.insurance}/> </div> )
+	var pStyle = function(width) {
+	    return {display:"inline-block", width:width+"px", "text-align":"center"}
+	}
+	//var idStyle = {display:"inline-block" width:this.props.idWidth+"px", "text-align":"center"}
+	return ( <div>
+		 <p style={pStyle(this.props.idWidth)}>{this.props.insurance.id}</p><p style={pStyle(this.props.coverWidth)}>{this.props.insurance.currentFundedCover}/{this.props.insurance.totalCoverAmount}</p><p style={pStyle(this.props.premiumWidth)}>{this.props.insurance.premium}</p> <this.props.actionComponent insurance={this.props.insurance}/>
+		 </div> )
     }
 }
+
+/* Have id, totalAmount, currentlyFunded (fully or not), total premium, action bit
+*
+*/
 
 class InsurancePolicyList extends Component {
     constructor(props) {
 	super(props)
     }
     render() {
+	var idWidth = 80;
+	var coverWidth = 130;
+	var premiumWidth = 120;
+	var headerStyle = function(width) {
+	    return {display:"inline-block", width:width+"px", "text-align":"center"}
+	}
 	return (
 		<div>
 		<h2>{this.props.header}</h2>
-		{this.props.insurances.map( function(insurance) {
-		    return <InsurancePolicyView key={insurance.id} insurance={insurance} actionComponent={this.props.actionComponent}/>
+		<h4 style={headerStyle(idWidth)}>ID</h4>
+		<h4 style={headerStyle(coverWidth)}>Cover</h4>
+		<h4 style={headerStyle(premiumWidth)}>Premium</h4>
+	    {this.props.insurances.map( function(insurance) {
+		return <InsurancePolicyView key={insurance.id} idWidth={idWidth} coverWidth={coverWidth} premiumWidth={premiumWidth} insurance={insurance} actionComponent={this.props.actionComponent}/>
 		}.bind(this))}
 	    </div>
 	)   			      
@@ -184,6 +204,7 @@ class App extends Component {
     }
 
     convertInsurance(insuranceArr) {
+	//console.log(insuranceArr)
 	var id = insuranceArr[0].toNumber()
 	var proposer = insuranceArr[1]
 	var numProviders = insuranceArr[2].toNumber()
@@ -233,7 +254,7 @@ class App extends Component {
 	var cancelButtonClass = buttonClassFactory(this.removeInsurance.bind(this), "Cancel")
 	var claimButtonClass = buttonClassFactory(this.claimInsurance.bind(this), "Claim")
 	*/
-	// Returns a component lass for a button with label text and callback f called with props.insurance
+	// Returns a component class for a button with label text and callback f called with props.insurance
 	var buttonComponentFactory = function(f,text) {
 	    var buttonComponent = class extends Component {
 		constructor(props) {
@@ -285,7 +306,7 @@ class App extends Component {
 		<main className="container">
 		<div className="pure-g">
 		<div className="pure-u-1-1">
-
+		<flights.FlightSelector />
 		<InsurancePolicyCreator addInsurance={this.addNewInsurance.bind(this)} />
 		<InsurancePolicyList header={"Your Insurances"} actionComponent={claimButtonClass} insurances={this.state.userFilledInsurances}></InsurancePolicyList>
 		<InsurancePolicyList header={"Your Unfunded Insurances"} actionComponent={cancelButtonClass} insurances={this.state.userUnfilledInsurances}></InsurancePolicyList>
@@ -301,10 +322,15 @@ class App extends Component {
 export default App
 
 /*
+In order:
+- API search fields/calls
+-
 Plan:
-- Improve the creator and corresponding bet descr (Styling)
+- Improve the creator 
+- Improve bet descr (and Styling)
+- General styling
 - Need to make the API calls
 - Search fields for API
 - Need list for insurances you have invested in that are filled
-- Show how much is invested per isnurance
+- If nothing is in the list, then display some message
 */
