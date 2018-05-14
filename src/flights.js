@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import {Button} from 'react-bootstrap'
 
 var flightAPI = {appId:"179cfd47", appKey:"be8298ebb8269c37a0130fa63128610f"}
 
@@ -111,31 +112,33 @@ export class FlightSelector extends Component {
 	var columnEntry = function(text, width) {
 	    return (<p style={{display:"inline-block", width:width+"px", "text-align":"center"}}>{text}</p>)
 	}
-	return (<div>
+	return (
+		<div>
+		<div style={{display:"inline-block"}}>
 		
-		<select onChange={(i) => {this.hour = i.target.value}}>
+		<select style={{ margin:"2px 2px 10px 2px"}} onChange={(i) => {this.hour = i.target.value}}>
 		<option value="" disabled="disabled" selected="selected" >Hour</option>
 		{rangeArray(0,23).map(function(i) { return (<option value={i}>{i}</option>) } )}
 		</select>
 		
-		<select onChange={(i) => {this.day = i.target.value}}>
+		<select style={{ margin:"2px 2px 10px 2px"}} onChange={(i) => {this.day = i.target.value}}>
 		<option value="" disabled="disabled" selected="selected" >Day</option>
 		{rangeArray(1,31).map(function(i) { return (<option value={i}>{i}</option>) })}
 		</select>
 		
-		<select onChange={(i) => {this.month = i.target.value}}>
+		<select style={{ margin:"2px 2px 10px 2px"}} onChange={(i) => {this.month = i.target.value}}>
 		<option value="" disabled="disabled" selected="selected">Month</option>
 		{rangeArray(1,12).map(function(i) { return (<option value={i}>{i}</option>) })}
 		</select>
 		
-		<select onChange={(i) => {this.year = i.target.value}}>
+		<select style={{ margin:"2px 2px 10px 2px"}} onChange={(i) => {this.year = i.target.value}}>
 		<option value="" disabled="disabled" selected="selected">Year</option>
 		{rangeArray(2018,2028).map(function(i) { return (<option value={i}>{i}</option>) })}
 		</select >
 
 		<input placeholder="Airport Code" style={{width:"97px"}} onChange={(i) => {this.airportCode = i.target.value}}></input>
 
-		<button onClick={() => this.search()}>Search</button>
+		<Button style={{ margin:"2px 2px 10px 2px"}} bsStyle ="primary" onClick={() => this.search()}>Search</Button>
 
 		<h4>Results for flights from airport {this.state.airportCode} between {this.state.hour} and {parseInt(this.state.hour)+1} hours on {this.state.day}/{this.state.month}/{this.state.year} ({this.state.flights.length} results sorted by destination)</h4>
 		{this.state.flights.length ? columnHeader("Flight Number", numberWidth) : null}
@@ -149,7 +152,8 @@ export class FlightSelector extends Component {
 			    {columnEntry(flight.arrivalTime, arrivalTimeWidth)}
 			    <button onClick={() => this.selectFlight(flight)}>Select Flight</button></div>) 
 		}.bind(this))}
-	       </div>);
+		</div>
+	    </div>);
     }
 }
 
