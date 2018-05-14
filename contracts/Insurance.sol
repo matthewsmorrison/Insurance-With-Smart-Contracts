@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+solidity ^0.4.18;
 import "../installed_contracts/jsmnsol-lib/contracts/JsmnSolLib.sol";
 import "../installed_contracts/bytesutils.sol";
 import "../installed_contracts/tlsnutils.sol";
@@ -103,9 +103,16 @@ contract Insurance {
   function acceptContract(uint _insuranceID) public payable {
     require(msg.value > 0);
     require(!allInsuranceCovers[_insuranceID].filled);
-    require((allInsuranceCovers[_insuranceID].currentFundedCover + msg.value) <= allInsuranceCovers[_insuranceID].totalCoverAmount);
+    /* require((allInsuranceCovers[_insuranceID].currentFundedCover + msg.value) <= allInsuranceCovers[_insuranceID].totalCoverAmount); */
 
-    allInsuranceCovers[_insuranceID].currentFundedCover = allInsuranceCovers[_insuranceID].currentFundedCover + msg.value;
+    if(allInsuranceCovers[_insuranceID].currentFundedCover + msg.value > allInsuranceCovers[_insuranceID].totalCoverAmount){
+      msg.sender.transfer(allInsuranceCovers[_insuranceID].currentFundedCover + msg.value - allInsuranceCovers[_insuranceID].totalCoverAmount);
+      allInsuranceCovers[_insuranceID].currentFundedCover = allInsuranceCovers[_insuranceID].totalCoverAmount;
+    }
+    else{
+      allInsuranceCovers[_insuranceID].currentFundedCover = allInsuranceCovers[_insuranceID].currentFundedCover + msg.value;
+    }
+
     if (allInsuranceCovers[_insuranceID].currentFundedCover == allInsuranceCovers[_insuranceID].totalCoverAmount) {
       allInsuranceCovers[_insuranceID].filled = true;
     }
@@ -146,13 +153,6 @@ contract Insurance {
     // Flight status has to be 'C' for 'cancelled'
 
     uint i;
-    /* if (!allInsuranceCovers[_insuranceID].filled) {
-      // contract did not have enough contributions
-      allInsuranceCovers[_insuranceID].proposer.transfer(allInsuranceCovers[_insuranceID].premiumAmount);
-      for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders; i++) {
-        allInsuranceCovers[_insuranceID].contributors[i].transfer(allInsuranceCovers[_insuranceID].contributions[i]);
-      }
-    } */
     if (temp == 2 && allInsuranceCovers[_insuranceID].filled) {
       // the flight was cancelled
       allInsuranceCovers[_insuranceID].proposer.transfer(allInsuranceCovers[_insuranceID].totalCoverAmount);
