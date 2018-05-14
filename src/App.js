@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import Insurance from '../build/contracts/Insurance.json'
 import getWeb3 from './utils/getWeb3'
+import * as flights from './flights.js'
 
 import './css/oswald.css'
 import './css/open-sans.css'
@@ -30,20 +31,39 @@ class InsurancePolicyView extends Component {
 	super(props)
     }
     render() {
-	return ( <p> Insurance policy: {this.props.insurance.id} with cover {this.props.insurance.totalCoverAmount} and premium {this.props.insurance.premium} {this.props.actionComponent(this.props.insurance)}</p> )
+	var pStyle = function(width) {
+	    return {display:"inline-block", width:width+"px", "text-align":"center"}
+	}
+	//var idStyle = {display:"inline-block" width:this.props.idWidth+"px", "text-align":"center"}
+	return ( <div>
+		 <p style={pStyle(this.props.idWidth)}>{this.props.insurance.id}</p><p style={pStyle(this.props.coverWidth)}>{this.props.insurance.currentFundedCover}/{this.props.insurance.totalCoverAmount}</p><p style={pStyle(this.props.premiumWidth)}>{this.props.insurance.premium}</p> <this.props.actionComponent insurance={this.props.insurance}/>
+		 </div> )
     }
 }
+
+/* Have id, totalAmount, currentlyFunded (fully or not), total premium, action bit
+*
+*/
 
 class InsurancePolicyList extends Component {
     constructor(props) {
 	super(props)
     }
     render() {
+	var idWidth = 80;
+	var coverWidth = 130;
+	var premiumWidth = 120;
+	var headerStyle = function(width) {
+	    return {display:"inline-block", width:width+"px", "text-align":"center"}
+	}
 	return (
 		<div>
 		<h2>{this.props.header}</h2>
-		{this.props.insurances.map( function(insurance) {
-		    return <InsurancePolicyView key={insurance.id} insurance={insurance} actionComponent={this.props.actionComponent}/>
+		<h4 style={headerStyle(idWidth)}>ID</h4>
+		<h4 style={headerStyle(coverWidth)}>Cover</h4>
+		<h4 style={headerStyle(premiumWidth)}>Premium</h4>
+	    {this.props.insurances.map( function(insurance) {
+		return <InsurancePolicyView key={insurance.id} idWidth={idWidth} coverWidth={coverWidth} premiumWidth={premiumWidth} insurance={insurance} actionComponent={this.props.actionComponent}/>
 		}.bind(this))}
 	    </div>
 	)   			      
@@ -57,7 +77,6 @@ class InsurancePolicyCreator extends Component {
     }
     setCover(cover) {
 	cover = parseFloat(cover)
-	console.log(cover)
 	if (cover) {
 	    this.setState({cover:cover})
 	}
@@ -86,6 +105,9 @@ class InsurancePolicyCreator extends Component {
     }
 }
 
+/* Problems: No headers
+*/
+
 class App extends Component {
     constructor(props) {
 	super(props)
@@ -93,7 +115,8 @@ class App extends Component {
 	this.state = {
 	    storageValue: 0,
 	    web3: null,
-	    yourInsurances: [],
+	    userUnfilledInsurances: [],
+	    userFilledInsurances: [],
 	    availableInsurances: []
 	}
     }
@@ -132,7 +155,7 @@ class App extends Component {
 		this.getCurrAccount = function() {
 		    if (this.state.web3.eth.accounts[0] !== this.currAccount) {
 			this.currAccount = this.state.web3.eth.accounts[0];
-			this.getAllBets()
+			this.getAllInsurances()
 		    }
 		}.bind(this)
 		setInterval(this.getCurrAccount, 100)
@@ -151,41 +174,51 @@ class App extends Component {
     async getAllInsurances() {
 	console.log("got all insurances");
 	var insuranceIds = await this.insuranceContractInst.getInsuranceContracts()
-	var yourInsurances = []
+	console.log(insuranceIds);
+	var userFilledInsurances = []
+	var userUnfilledInsurances = []
 	var availableInsurances = []
 	for (var i = 0; i < insuranceIds.length; i++) {
 	    var insurance = await this.insuranceContractInst.allInsuranceCovers(insuranceIds[i])
+	    var contributors = await this.insuranceContractInst.getInsuranceContributors(insuranceIds[i])
+	    var contributions = await this.insuranceContractInst.getInsuranceContributions(insuranceIds[i])
+	    insurance.push(contributors)
+	    insurance.push(contributions)
 	    insurance = this.convertInsurance(insurance)
 	    console.log(insurance)
 	    if (insurance.deleted === false) {
 		if (insurance.proposer === this.currAccount) {
-		    yourInsurances.push(insurance)
+		    if (insurance.filled) {
+			userFilledInsurances.push(insurance)
+		    }
+		    else {
+			userUnfilledInsurances.push(insurance)
+		    }
 		}
 		else {
 		    availableInsurances.push(insurance)
 		}
 	    }
 	}
-	this.setState({yourInsurances: yourInsurances, availableInsurances: availableInsurances})
+	this.setState({userFilledInsurances: userFilledInsurances, userUnfilledInsurances:userUnfilledInsurances, availableInsurances: availableInsurances})
     }
 
     convertInsurance(insuranceArr) {
+	//console.log(insuranceArr)
 	var id = insuranceArr[0].toNumber()
 	var proposer = insuranceArr[1]
 	var numProviders = insuranceArr[2].toNumber()
-	var totalCoverAmount = insuranceArr[3].toNumber()
-	var currentFundedCover = insuranceArr[4].toNumber()
-	var premium = insuranceArr[5].toNumber()
+	var totalCoverAmount = this.state.web3.fromWei(insuranceArr[3].toNumber(), "ether")
+	var currentFundedCover = this.state.web3.fromWei(insuranceArr[4].toNumber(), "ether")
+	var premium = this.state.web3.fromWei(insuranceArr[5].toNumber(), "ether")
 	var flightId = insuranceArr[6].toNumber()
 	var filled = insuranceArr[7]
 	var deleted = insuranceArr[8]
-	/*var contributors = insuranceArr[9]
+	var contributors = insuranceArr[9]
 	var contributions = insuranceArr[10]
 	for (var i = 0; i < contributions.length; i++) {
-	    contributions[i] = contributions[i].toNumber()
-	    }*/
-	var contributors = []
-	var contributions = []
+	    contributions[i] = this.state.web3.fromWei(contributions[i].toNumber(), "ether")
+	}
 	var insurance = new InsurancePolicy(id, proposer, numProviders, totalCoverAmount, currentFundedCover, premium, flightId, filled, deleted, contributors, contributions);
 	return insurance
     }
@@ -199,22 +232,71 @@ class App extends Component {
 	this.insuranceContractInst.proposeInsuranceCover(flightProof, totalCoverAmount, {from: proposer, value: premiumAmount});
     }
 
-    async removeInsurance(id) {
-	console.log("removing insurance " + id);
-	this.insuranceContractInst.cancelInsuranceContract(id, {from:this.currAccount});
+    async removeInsurance(insurance) {
+	console.log("removing insurance " + insurance.id);
+	this.insuranceContractInst.cancelInsuranceContract(insurance.id, {from:this.currAccount});
     }
 
-    async investInsurance() {
-	console.log("paying into insurance")
+    async investInsurance(insurance, amount) {
+	console.log("paying into insurance " + amount)
+	this.insuranceContractInst.acceptContract(insurance.id, {from:this.currAccount, value: this.state.web3.toWei(amount, "ether")})
     }
 
-    async claimInsurance() {
-
+    async claimInsurance(insurance) {
+	console.log("claiming insurance " + insurance.id)
     }    
 
 
     render() {
-	var button = function(insurance) {return (<button onClick={() => this.removeInsurance.bind(this)(insurance.id) }>{insurance.id}</button>)}.bind(this);
+	/*var buttonClassFactory = function(f, text) {
+	    return function(insurance) {return(<button onClick={() => f(insurance) }>{text}</button>)}.bind(this)
+	}.bind(this)
+	var cancelButtonClass = buttonClassFactory(this.removeInsurance.bind(this), "Cancel")
+	var claimButtonClass = buttonClassFactory(this.claimInsurance.bind(this), "Claim")
+	*/
+	// Returns a component class for a button with label text and callback f called with props.insurance
+	var buttonComponentFactory = function(f,text) {
+	    var buttonComponent = class extends Component {
+		constructor(props) {
+		    super(props)
+		}
+		render() {
+		     return(<button onClick={() => f(this.props.insurance) }>{text}</button>)
+		}
+	    }
+	    return buttonComponent
+	}
+	var cancelButtonClass = buttonComponentFactory(this.removeInsurance.bind(this), "Cancel")
+	var claimButtonClass = buttonComponentFactory(this.claimInsurance.bind(this), "Claim Payout")
+	var app = this
+	var investComponent = class extends Component {
+	    constructor(props) {
+		super(props)
+		this.state = {investement:0}
+	    }
+	    setInvestement(value) {
+		value = parseFloat(value)
+		if (value) {
+		    this.setState({investement:value})
+		}
+	    }
+	    render() {
+		var contributions = 0
+		for (var i = 0; i < this.props.insurance.contributors.length; i++) {
+		    if (this.props.insurance.contributors[i] === app.currAccount) {
+			contributions += parseFloat(this.props.insurance.contributions[i])
+		    }
+		}
+		return(
+			<div style={{display:"inline-block"}}>
+		    	<button onClick={() => {app.investInsurance(this.props.insurance, this.state.investement)}}>Invest {this.state.investement} ether</button>
+			<input style={{width:"65px"}} placeholder="Stake" onChange={(e) => {this.setInvestement(e.target.value)}}></input>
+			{(contributions > 0) ? "(Already invested " + contributions + " ether)" : null}
+		    </div>
+		)
+	    }
+	}
+	// 
 	return (
 		<div className="App">
 		<nav className="navbar pure-menu pure-menu-horizontal">
@@ -224,9 +306,11 @@ class App extends Component {
 		<main className="container">
 		<div className="pure-g">
 		<div className="pure-u-1-1">
-
+		<flights.FlightSelector />
 		<InsurancePolicyCreator addInsurance={this.addNewInsurance.bind(this)} />
-		<InsurancePolicyList header={"Your Insurances"} actionComponent={button} insurances={this.state.yourInsurances}></InsurancePolicyList>
+		<InsurancePolicyList header={"Your Insurances"} actionComponent={claimButtonClass} insurances={this.state.userFilledInsurances}></InsurancePolicyList>
+		<InsurancePolicyList header={"Your Unfunded Insurances"} actionComponent={cancelButtonClass} insurances={this.state.userUnfilledInsurances}></InsurancePolicyList>
+		<InsurancePolicyList header={"Invest in Insurance"} actionComponent={investComponent} insurances={this.state.availableInsurances}></InsurancePolicyList>
 		</div>
 		</div>
 		</main>
@@ -238,7 +322,15 @@ class App extends Component {
 export default App
 
 /*
+In order:
+- API search fields/calls
+-
 Plan:
-- Make the 3 lists
-- Improve the creator and corresponding bet descr - need cover amount and premium
+- Improve the creator 
+- Improve bet descr (and Styling)
+- General styling
+- Need to make the API calls
+- Search fields for API
+- Need list for insurances you have invested in that are filled
+- If nothing is in the list, then display some message
 */

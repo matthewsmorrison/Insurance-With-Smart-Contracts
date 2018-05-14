@@ -164,15 +164,7 @@ contract('Insurance', function(accounts, app) {
     var insuranceID = 1000;
     var contributor1BalanceBefore = web3.eth.getBalance(accounts[1]).toNumber();
     var contributor2BalanceBefore = web3.eth.getBalance(accounts[2]).toNumber();
-    // console.log("contributor1BalanceBefore: ", contributor1BalanceBefore);
-    // console.log("contributor2BalanceBefore: ", contributor2BalanceBefore);
-    var contributor1BalanceAfter;
-    var contributor2BalanceAfter;
-    var contributors;
-    var contributions;
-    var totalCoverAmount;
-    var premiumAmount;
-    var status;
+
 
     return Insurance.deployed().then(function(instance) {
       app = instance;
