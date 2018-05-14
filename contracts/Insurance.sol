@@ -38,7 +38,7 @@ contract Insurance {
   /***********************************/
 
   event InsuranceCoverChange(uint insuranceID);
-  event Status(uint status);
+  event Status(string status);
   /***********************************/
   /********* PUBLIC FUNCTIONS ********/
   /***********************************/
@@ -54,11 +54,7 @@ contract Insurance {
   /// @param  _totalCoverAmount   The total cover required by the user
   function proposeInsuranceCover(bytes memory _hex_proof, uint _totalCoverAmount) public payable {
     require(msg.value > 0);
-
-    // Verify the TLS-N Proof
-    uint256 qx = 0x0de2583dc1b70c4d17936f6ca4d2a07aa2aba06b76a97e60e62af286adc1cc09; //public key x-coordinate signer
-    uint256 qy = 0x68ba8822c94e79903406a002f4bc6a982d1b473f109debb2aa020c66f642144a; //public key y-coordinate signer
-    require(tlsnutils.verifyProof(_hex_proof, qx, qy));
+    require(verifyProof(_hex_proof));
 
     // Parse the response body of the TLS-N proof
     string memory body = string(tlsnutils.getHTTPBody(_hex_proof));
@@ -69,7 +65,8 @@ contract Insurance {
 
     // Check that the flight has not already occurred
     // Flight status has to be 'S' for 'scheduled'
-    string memory status = JsmnSolLib.getBytes(body, tokens[178].start, tokens[178].end);
+    string memory status = JsmnSolLib.getBytes(body, tokens[227].start, tokens[227].end);
+    /* Status(status); */
     require(compareStrings(status,'S'));
 
     // Then get the flight ID
@@ -103,15 +100,10 @@ contract Insurance {
   function acceptContract(uint _insuranceID) public payable {
     require(msg.value > 0);
     require(!allInsuranceCovers[_insuranceID].filled);
-    /* require((allInsuranceCovers[_insuranceID].currentFundedCover + msg.value) <= allInsuranceCovers[_insuranceID].totalCoverAmount); */
+    require((allInsuranceCovers[_insuranceID].currentFundedCover + msg.value) <= allInsuranceCovers[_insuranceID].totalCoverAmount);
 
-    if(allInsuranceCovers[_insuranceID].currentFundedCover + msg.value > allInsuranceCovers[_insuranceID].totalCoverAmount){
-      msg.sender.transfer(allInsuranceCovers[_insuranceID].currentFundedCover + msg.value - allInsuranceCovers[_insuranceID].totalCoverAmount);
-      allInsuranceCovers[_insuranceID].currentFundedCover = allInsuranceCovers[_insuranceID].totalCoverAmount;
-    }
-    else{
-      allInsuranceCovers[_insuranceID].currentFundedCover = allInsuranceCovers[_insuranceID].currentFundedCover + msg.value;
-    }
+    allInsuranceCovers[_insuranceID].currentFundedCover = allInsuranceCovers[_insuranceID].currentFundedCover + msg.value;
+
 
     if (allInsuranceCovers[_insuranceID].currentFundedCover == allInsuranceCovers[_insuranceID].totalCoverAmount) {
       allInsuranceCovers[_insuranceID].filled = true;
@@ -130,7 +122,7 @@ contract Insurance {
   function resolveContract(uint _insuranceID, bytes memory _hex_proof) public payable {
     // Verify the TLS-N Proof
     require(allInsuranceCovers[_insuranceID].filled);
-    require(tlsnutils.verifyProof(_hex_proof));
+    require(verifyProof(_hex_proof));
 
     // Parse the response body of the TLS-N proof
     string memory body = string(tlsnutils.getHTTPBody(_hex_proof));
@@ -142,36 +134,37 @@ contract Insurance {
     // First check that the flight IDs are the same
     int temp = getFlightID(body, tokens);
     // Add this back in once testing is finished
-    /* require(flightID == allInsuranceCovers[_insuranceID].flightID); */
+    /* require(temp == allInsuranceCovers[_insuranceID].flightID); */
 
     // Check the status
     temp = getStatus(body, tokens);
     require(temp != 1);
-
     // If the flight was cancelled pay out the funds to the proposer
     // Also pay the premium to the contributors
     // Flight status has to be 'C' for 'cancelled'
 
+    uint sum = 0;
+    uint premiumPayout;
+
     uint i;
-    if (temp == 2 && allInsuranceCovers[_insuranceID].filled) {
+    if (temp == 2) {
       // the flight was cancelled
       allInsuranceCovers[_insuranceID].proposer.transfer(allInsuranceCovers[_insuranceID].totalCoverAmount);
-      for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders; i++) {
-        allInsuranceCovers[_insuranceID].contributors[i].transfer((allInsuranceCovers[_insuranceID].contributions[i] * allInsuranceCovers[_insuranceID].premiumAmount) / allInsuranceCovers[_insuranceID].totalCoverAmount);
-      }
-    }
-    else {
-      // the flight was not cancelled
-      uint sum = 0;
-      uint premiumPayout;
       for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders - 1; i++) {
         premiumPayout = (allInsuranceCovers[_insuranceID].contributions[i] * allInsuranceCovers[_insuranceID].premiumAmount) / allInsuranceCovers[_insuranceID].totalCoverAmount;
         allInsuranceCovers[_insuranceID].contributors[i].transfer(premiumPayout + allInsuranceCovers[_insuranceID].contributions[i]);
         sum += premiumPayout;
       }
-      premiumPayout = (allInsuranceCovers[_insuranceID].contributions[i] * allInsuranceCovers[_insuranceID].premiumAmount) / allInsuranceCovers[_insuranceID].totalCoverAmount;
-      sum += premiumPayout;
       allInsuranceCovers[_insuranceID].contributors[i].transfer(allInsuranceCovers[_insuranceID].premiumAmount-sum + allInsuranceCovers[_insuranceID].contributions[i]);
+    }
+    else {
+      // the flight was not cancelled
+      for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders - 1; i++) {
+        premiumPayout = (allInsuranceCovers[_insuranceID].contributions[i] * allInsuranceCovers[_insuranceID].premiumAmount) / allInsuranceCovers[_insuranceID].totalCoverAmount;
+        allInsuranceCovers[_insuranceID].contributors[i].transfer(premiumPayout);
+        sum += premiumPayout;
+      }
+      allInsuranceCovers[_insuranceID].contributors[i].transfer(allInsuranceCovers[_insuranceID].premiumAmount-sum);
     }
     allInsuranceCovers[_insuranceID].deleted = true;
   }
@@ -256,5 +249,15 @@ contract Insurance {
 
   function getInsuranceContributions(uint _insuranceID) public constant returns(uint[]) {
     return allInsuranceCovers[_insuranceID].contributions;
+  }
+
+  function verifyProof(bytes memory proof) private returns (bool){
+    uint256 qx = 0xe0a5793d275a533d50421b201c2c9a909abb58b1a9c0f9eb9b7963e5c8bc2295;
+    uint256 qy = 0xf34d47cb92b6474562675127677d4e446418498884c101aeb38f3afb0cab997e;
+
+    if(tlsnutils.verifyProof(proof, qx, qy)) {
+      return true;
+    }
+    return false;
   }
 }
