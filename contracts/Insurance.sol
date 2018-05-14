@@ -1,4 +1,4 @@
-solidity ^0.4.18;
+pragma solidity ^0.4.18;
 import "../installed_contracts/jsmnsol-lib/contracts/JsmnSolLib.sol";
 import "../installed_contracts/bytesutils.sol";
 import "../installed_contracts/tlsnutils.sol";
@@ -162,9 +162,16 @@ contract Insurance {
     }
     else {
       // the flight was not cancelled
-      for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders; i++) {
-        allInsuranceCovers[_insuranceID].contributors[i].transfer(((allInsuranceCovers[_insuranceID].contributions[i] * allInsuranceCovers[_insuranceID].premiumAmount) / allInsuranceCovers[_insuranceID].totalCoverAmount) + allInsuranceCovers[_insuranceID].contributions[i]);
+      uint sum = 0;
+      uint premiumPayout;
+      for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders - 1; i++) {
+        premiumPayout = (allInsuranceCovers[_insuranceID].contributions[i] * allInsuranceCovers[_insuranceID].premiumAmount) / allInsuranceCovers[_insuranceID].totalCoverAmount;
+        allInsuranceCovers[_insuranceID].contributors[i].transfer(premiumPayout + allInsuranceCovers[_insuranceID].contributions[i]);
+        sum += premiumPayout;
       }
+      premiumPayout = (allInsuranceCovers[_insuranceID].contributions[i] * allInsuranceCovers[_insuranceID].premiumAmount) / allInsuranceCovers[_insuranceID].totalCoverAmount;
+      sum += premiumPayout;
+      allInsuranceCovers[_insuranceID].contributors[i].transfer(allInsuranceCovers[_insuranceID].premiumAmount-sum + allInsuranceCovers[_insuranceID].contributions[i]);
     }
     allInsuranceCovers[_insuranceID].deleted = true;
   }
