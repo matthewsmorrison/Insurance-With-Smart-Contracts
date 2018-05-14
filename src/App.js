@@ -291,6 +291,7 @@ class App extends Component {
     // Function to claim an unclaimed insurance
     async claimInsurance(insurance) {
 	console.log("claiming insurance " + insurance.id)
+	this.insuranceContractInst.resolveContract(insurance.id, flights.getFlight(insurance.flightID)["proof"])
     }    
 
 
@@ -339,7 +340,7 @@ class App extends Component {
 		)
 	    }
 	}
-	// 
+	
 	return (
 		<div className="App">
 		<nav className="navbar pure-menu pure-menu-horizontal">
@@ -353,7 +354,7 @@ class App extends Component {
 		<InsurancePolicyList header={"Your Insurances"} actionComponent={claimButtonClass} insurances={this.state.userFilledInsurances}></InsurancePolicyList>
 		<InsurancePolicyList header={"Your Unfunded Insurances"} actionComponent={cancelButtonClass} insurances={this.state.userUnfilledInsurances}></InsurancePolicyList>
 		<InsurancePolicyList header={"Invest in Insurance"} actionComponent={investComponent} insurances={this.state.availableInsurances}></InsurancePolicyList>
-		<InsurancePolicyList header={"Insurance You Have Invested In"} actionComponent={investComponent} insurances={this.state.investedInsurance}></InsurancePolicyList>
+		<InsurancePolicyList header={"Insurance You Have Invested In"} actionComponent={claimButtonClass} insurances={this.state.investedInsurance}></InsurancePolicyList>
 		</div>
 		</div>
 		</main>
@@ -366,10 +367,10 @@ export default App
 
 /*
 In order:
-- need proper proof to work
-- toWei with numbers
+- need proper proof
+- claim insurance not working
 - Need button for claiming insurance premium and repayement or whatevr
--  
+- Make sure the flight from flight.flightStatuses[] is correct
 Plan:
 - Improve the creator 
 - Improve bet descr (and Styling)
