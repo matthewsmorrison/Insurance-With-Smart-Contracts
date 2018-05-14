@@ -1,5 +1,5 @@
 /* PAGE */
-
+/*
 body,
 .pure-g [class*=pure-u] {
   font-family: 'Open Sans', sans-serif;
@@ -7,7 +7,7 @@ body,
 
 h1, h2, h3 {
   font-family: 'Oswald', 'Arial Narrow', sans-serif;
-}
+}*/
 
 code {
   display: block;
@@ -15,6 +15,7 @@ code {
   padding: 10px;
   background: #eee;
 }
+
 
 .container {
   box-sizing: border-box;
@@ -34,8 +35,20 @@ code {
   border-color: #0c1a2b;
 }
 
-/* NAVBAR */
 
+
+/* Bootstrap */
+
+.jumbotron {
+  color: #b30000;
+  text-align: center;
+  background-color: transparent;
+  background-image: url(img/clouds.jpg);
+}
+
+
+/* NAVBAR */
+/*
 .navbar {
   position: fixed;
   padding: 5px;
@@ -66,3 +79,4 @@ code {
   height: 16px;
   margin-right: 10px;
 }
+*/
