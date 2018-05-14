@@ -78,7 +78,7 @@ class InsurancePolicyList extends Component {
 		return <InsurancePolicyView key={insurance.id} idWidth={idWidth} coverWidth={coverWidth} premiumWidth={premiumWidth} insurance={insurance} actionComponent={this.props.actionComponent}/>
 		}.bind(this))}
 	    </div>
-	)   			      
+	)
     }
 }
 
@@ -297,7 +297,8 @@ class App extends Component {
     // Function to claim an unclaimed insurance
     async claimInsurance(insurance) {
 	console.log("claiming insurance " + insurance.id)
-    }    
+	this.insuranceContractInst.resolveContract(insurance.id, flights.getFlight(insurance.flightID)["proof"])
+    }
 
 
     render() {
@@ -345,7 +346,7 @@ class App extends Component {
 		)
 	    }
 	}
-	// 
+
 	return (
 		<div className="App">
 		<div class="container">
@@ -389,7 +390,7 @@ class App extends Component {
 					</div>
 				}/>
 
-				<Route path="/create_insurance" render ={()=> 
+				<Route path="/create_insurance" render ={()=>
 					<div>
 						<InsurancePolicyCreator addInsurance={this.addNewInsurance.bind(this)} />
 					</div>
@@ -420,6 +421,14 @@ class App extends Component {
 					<InsurancePolicyList header={"Invest in Insurance"} actionComponent={investComponent} insurances={this.state.availableInsurances}></InsurancePolicyList>
 				</Route>
 
+        <Route path="/investements">
+          <InsurancePolicyList header={"Your Investements in Insurance"} actionComponent={investComponent} insurances={this.state.availableInsurances}></InsurancePolicyList>
+        </Route>
+
+        <Route path="">
+
+        </Route>
+
 				<Route path="/support" render = { ()=>
 					<div>
 						<Jumbotron>
@@ -441,14 +450,17 @@ class App extends Component {
 
 export default App
 
+// <InsurancePolicyList header={"Insurance You Have Invested In"} actionComponent={claimButtonClass} insurances={this.state.investedInsurance}></InsurancePolicyList>
+
+
 /*
 In order:
-- need proper proof to work
-- toWei with numbers
+- need proper proof
+- claim insurance not working
 - Need button for claiming insurance premium and repayement or whatevr
--  
+- Make sure the flight from flight.flightStatuses[] is correct
 Plan:
-- Improve the creator 
+- Improve the creator
 - Improve bet descr (and Styling)
 - General styling
 - Need list for insurances you have invested in that are filled

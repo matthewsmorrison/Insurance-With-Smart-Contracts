@@ -12,6 +12,39 @@ function rangeArray(start, end) {
     return arr
 }
 
+
+function buf2hex(buffer) {
+    // create a byte array (Uint8Array) that we can read the array buffer
+    const byteArray = new Uint8Array(buffer);
+    
+    // for each element, we want to get itsa two-digit hexadecimal representation
+    const hexParts = [];
+    for (let i = 0; i < byteArray.length; i++) {
+	// convert value to hex
+	const hex = byteArray[i].toString(16);
+	// and add \x in front of every hex
+	const paddedHex = ('\\x') + ('00' + hex).slice(-2);
+	hexParts.push(paddedHex);
+    }
+    // join the parts
+    return hexParts.join('');
+}
+
+// Gets single flight api proof
+async function getFlight(id) {
+    var url = "https://flightstats.glitch.me/flex/flightstatus/rest/v2/json/flight/status/" + id
+    var results = await fetch(url)
+    var obj = await results.json()
+    console.log(obj["flightStatus"])
+    var proofUrl = "https://tlsproof.bastien.tech/proofgen.py?proof_type=2&url=" + "https://flightstats.glitch.me/flex/flightstatus/rest/v2/json/flight/status/" + id
+    var response = await fetch(proofUrl)
+    var buf = await response.arrayBuffer()
+    // Converts proof to expected hex format
+    var proof = buf2hex(buf)
+    proof = "0x"+proof.split("\\x").join("")
+    return {data:obj["flightStatus"], proof:proof}
+}
+
 // React component for selecting a flight
 export class FlightSelector extends Component {
     
@@ -60,11 +93,7 @@ export class FlightSelector extends Component {
 	var statuses = obj["flightStatuses"]
 	if (statuses.length > 0) {
 	    var id = statuses[0].flightId
-	    url = "https://flightstats.glitch.me/flex/flightstatus/rest/v2/json/flight/status/" + id
-	    myReq = new Request(url, fetchData)
-	    results = await fetch(myReq)
-	    obj = await results.json()
-	    console.log(obj["flightStatus"])
+	    flight = await getFlight(id)
 	    this.props.selectFlight(flight)
 	    this.setState({flights:[]})
 	}
