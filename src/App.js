@@ -209,7 +209,7 @@ class App extends Component {
 	var userUnfilledInsurances = []
 	var availableInsurances = []
 	var investedInsurance = []
-	var p =0
+	var p = 0 
 	// Cycle over the ids
 	console.log(insuranceIds.length)
 	for (var i = 0; i < insuranceIds.length; i++) {
