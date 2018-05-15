@@ -187,7 +187,7 @@ class App extends Component {
 		    console.log("STATUS", n)
 		}
 		// Start watching for event with above callback
-		var event = this.insuranceContractInst.Status()
+		var event = this.insuranceContractInst.StatusStr()
 		return event.watch(getInsurances)
 	    })
     }
@@ -209,7 +209,7 @@ class App extends Component {
 	var userUnfilledInsurances = []
 	var availableInsurances = []
 	var investedInsurance = []
-	var p =0
+	var p = 0 
 	// Cycle over the ids
 	console.log(insuranceIds.length)
 	for (var i = 0; i < insuranceIds.length; i++) {
