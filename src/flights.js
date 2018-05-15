@@ -16,7 +16,7 @@ function rangeArray(start, end) {
 function buf2hex(buffer) {
     // create a byte array (Uint8Array) that we can read the array buffer
     const byteArray = new Uint8Array(buffer);
-    
+
     // for each element, we want to get itsa two-digit hexadecimal representation
     const hexParts = [];
     for (let i = 0; i < byteArray.length; i++) {
@@ -32,23 +32,23 @@ function buf2hex(buffer) {
 
 // Gets single flight api proof
 export async function getFlight(id) {
-    var url = "https://flightstats.glitch.me/flex/flightstatus/rest/v2/json/flight/status/" + id
+    var url = "https://flightstats.glitch.me/flex/flightstatus/rest/v2/json/flight/status/" + id + "?minify=true"
     var results = await fetch(url)
     var obj = await results.json()
     console.log(obj["flightStatus"])
-    var proofUrl = "https://tlsproof.bastien.tech/proofgen.py?proof_type=2&url=" + "https://flightstats.glitch.me/flex/flightstatus/rest/v2/json/flight/status/" + id
+    var proofUrl = "https://tlsproof.bastien.tech/proofgen.py?proof_type=2&url=" + "https://flightstats.glitch.me/flex/flightstatus/rest/v2/json/flight/status/" + id + "?minify=true"
     var response = await fetch(proofUrl)
     var buf = await response.arrayBuffer()
     // Converts proof to expected hex format
     var proof = buf2hex(buf)
     proof = "0x"+proof.split("\\x").join("")
-    console.log(proofUrl, {data:obj["flightStatus"], proof:proof})
-    return {data:obj["flightStatus"], proof:proof}
+    console.log(proofUrl, {data:obj, proof:proof})
+    return {data:obj, proof:proof}
 }
 
 // React component for selecting a flight
 export class FlightSelector extends Component {
-    
+
     constructor(props) {
 	super(props);
 	this.hour = 0
@@ -76,7 +76,7 @@ export class FlightSelector extends Component {
 	console.log(obj, flights)
 	this.setState({airportCode:this.airportCode, hour:this.hour, day:this.day, month:this.month, year:this.year, flights:flights, selectedFlight:null})
     }
-    
+
     // Function that selects a particular flight from the list
     async selectFlight(flight) {
 	console.log(flight)
@@ -99,7 +99,7 @@ export class FlightSelector extends Component {
 	    this.setState({flights:[]})
 	}
     }
-    
+
     render() {
 	var numberWidth = 120
 	var depTimeWidth = 240
@@ -116,22 +116,22 @@ export class FlightSelector extends Component {
 	return (
 		<div>
 		<div style={{display:"inline-block"}}>
-		
+
 		<select style={{ margin:"2px 2px 10px 2px"}} onChange={(i) => {this.hour = i.target.value}}>
 		<option value="" disabled="disabled" selected="selected" >Hour</option>
 		{rangeArray(0,23).map(function(i) { return (<option value={i}>{i}</option>) } )}
 		</select>
-		
+
 		<select style={{ margin:"2px 2px 10px 2px"}} onChange={(i) => {this.day = i.target.value}}>
 		<option value="" disabled="disabled" selected="selected" >Day</option>
 		{rangeArray(1,31).map(function(i) { return (<option value={i}>{i}</option>) })}
 		</select>
-		
+
 		<select style={{ margin:"2px 2px 10px 2px"}} onChange={(i) => {this.month = i.target.value}}>
 		<option value="" disabled="disabled" selected="selected">Month</option>
 		{rangeArray(1,12).map(function(i) { return (<option value={i}>{i}</option>) })}
 		</select>
-		
+
 		<select style={{ margin:"2px 2px 10px 2px"}} onChange={(i) => {this.year = i.target.value}}>
 		<option value="" disabled="disabled" selected="selected">Year</option>
 		{rangeArray(2018,2028).map(function(i) { return (<option value={i}>{i}</option>) })}
@@ -151,7 +151,7 @@ export class FlightSelector extends Component {
 			    {columnEntry(flight.arrivalAirportFsCode, arrivalWidth)}
 			    {columnEntry(flight.departureTime,depTimeWidth)}
 			    {columnEntry(flight.arrivalTime, arrivalTimeWidth)}
-			    <button onClick={() => this.selectFlight(flight)}>Select Flight</button></div>) 
+			    <button onClick={() => this.selectFlight(flight)}>Select Flight</button></div>)
 		}.bind(this))}
 		</div>
 	    </div>);

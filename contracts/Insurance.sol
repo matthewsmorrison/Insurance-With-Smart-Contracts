@@ -56,7 +56,7 @@ contract Insurance {
   function proposeInsuranceCover(bytes memory _hex_proof, uint _totalCoverAmount) public payable {
     require(msg.value > 0);
     require(verifyProof(_hex_proof));
-
+    require(_totalCoverAmount > 0);
     // Parse the response body of the TLS-N proof
     string memory body = string(tlsnutils.getHTTPBody(_hex_proof));
     //StatusStr(body);
@@ -121,7 +121,7 @@ contract Insurance {
     // Verify the TLS-N Proof
     require(allInsuranceCovers[_insuranceID].filled);
     require(verifyProof(_hex_proof));
-
+    require(!allInsuranceCovers[_insuranceID].deleted);
     // Parse the response body of the TLS-N proof
     string memory body = string(tlsnutils.getHTTPBody(_hex_proof));
     JsmnSolLib.Token[] memory tokens;
@@ -132,7 +132,7 @@ contract Insurance {
     // First check that the flight IDs are the same
     int temp = getFlightID(body, tokens);
     // Add this back in once testing is finished
-    /* require(temp == allInsuranceCovers[_insuranceID].flightID); */
+    require(temp == allInsuranceCovers[_insuranceID].flightID);
 
     // Check the status
     temp = getStatus(body, tokens);

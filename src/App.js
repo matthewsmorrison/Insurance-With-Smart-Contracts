@@ -118,7 +118,7 @@ class InsurancePolicyCreator extends Component {
 		<p>I will pay a premium of:</p>
 		<input style={{width:"120px", margin:"0px 20px 0px 0px"}} onChange={(e) => {this.setPremium(e.target.value)} }></input>
 		<p style={{display:"inline-block"}}>{this.state.premium}</p>
-		{this.state.flight ? <button style={{display:"block"}} onClick={() => this.props.addInsurance(this.state.premium, this.state.cover, this.state.proof)}>Add Insurance Policy On Flight Number {this.state.flight.flightNumber}</button> : <button onClick={() => this.props.addInsurance(this.state.premium, this.state.cover, proof)}>DELETE THIS</button>}
+		{this.state.flight ? <button style={{display:"block"}} onClick={() => this.props.addInsurance(this.state.premium, this.state.cover, this.state.flight)}>Add Insurance Policy On Flight Number {this.state.flight.flightNumber}</button> : <button onClick={() => this.props.addInsurance(this.state.premium, this.state.cover, proof)}>DELETE THIS</button>}
 		</div>
 	    </div>
 	)
@@ -209,7 +209,7 @@ class App extends Component {
 	var userUnfilledInsurances = []
 	var availableInsurances = []
 	var investedInsurance = []
-	var p = 0 
+	var p = 0
 	// Cycle over the ids
 	console.log(insuranceIds.length)
 	for (var i = 0; i < insuranceIds.length; i++) {
@@ -308,8 +308,10 @@ class App extends Component {
 
     // Function to claim an unclaimed insurance
     async claimInsurance(insurance) {
-	console.log("claiming insurance " + insurance.id)
-	this.insuranceContractInst.resolveContract(insurance.id, flights.getFlight(insurance.flightID)["proof"])
+	console.log("claiming insurance " + insurance.id, insurance)
+  var flight = (await flights.getFlight(insurance.flightId))
+  var proof = flight["proof"]
+	this.insuranceContractInst.resolveContract(insurance.id, proof, {from:this.currAccount})
     }
 
 
@@ -397,7 +399,7 @@ class App extends Component {
 							<h1>Are you ready for a next trip?</h1>
 		       			    <p><strong>FlightDApp. Your personal flight insurance generator.</strong></p>
 						</Jumbotron>
-						<Well> 
+						<Well>
 							 <h3> Welcome to decentralised Flight Insurance DApp. </h3>
 							 <p> On this website you can create a flight insurance request to protect yourself against cancelled flights or make an investment on available requests.
 							 By using innovative TLS-N protocol it is possible to verify each request in a decentralised way, allowing our users to interact with each other without a designated centralised party.
@@ -428,13 +430,13 @@ class App extends Component {
 				   <div>
 				   <Well>
 				    <h2>More Information on FlightDApp</h2>
-	
-				    <p>This decentralised application on the Ethereum test network (Rinkeby) allows users to take out insurance with other users to protect them against cancelled flights. 
+
+				    <p>This decentralised application on the Ethereum test network (Rinkeby) allows users to take out insurance with other users to protect them against cancelled flights.
 				    Using the TLS-N protocol, we allow users to verify whether flights have been cancelled or not. </p>
 				    <p> we do not have pre-set templates for policies are users are able to dictate their own policies and wait to be funded from other users.</p>
 				    <p>Having the ability to independently verify information would remove the need for trust in third parties while guaranteeing the validity of the data received over the internet.
 				     As a result, it would be possible to automatically feed this information into the blockchain ecosystem and execute contracts on the basis of it. TLS-N, an extension to the existing secure web protocol TLS, achieves this goal.</p>
-					<p>It provides a secure, non-repudiable and trivially verifiable proof about the contents (message, time-stamped) of a TLS session, and that the contents have not been tampered with. 
+					<p>It provides a secure, non-repudiable and trivially verifiable proof about the contents (message, time-stamped) of a TLS session, and that the contents have not been tampered with.
 					As a result, users no longer need to trust that oracles or intermediaries have not tampered with data, and can automate the execution of their contracts based on the TLS-N verification.</p>
 
 					<p><strong> Main Limitation: </strong> Using a free API for the verification of flight status limits our DApp to propose insurance contracts on flights taking place within three days.</p>
@@ -476,8 +478,8 @@ class App extends Component {
         				<Well bsSize ="small">
         					<h3> Submitted Investment requests </h3>
         				</Well>
-         			 	<InsurancePolicyList header={"Your Investements in Insurance"} actionComponent={investComponent} insurances={this.state.availableInsurances}></InsurancePolicyList>
-        			</div>	
+         			 	<InsurancePolicyList header={"Your Investements in Insurance"} actionComponent={claimButtonClass} insurances={this.state.investedInsurance}></InsurancePolicyList>
+        			</div>
         		}/>
 
         <Route path="">
