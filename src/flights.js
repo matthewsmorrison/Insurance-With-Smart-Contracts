@@ -42,7 +42,7 @@ export async function getFlight(id) {
     // Converts proof to expected hex format
     var proof = buf2hex(buf)
     proof = "0x"+proof.split("\\x").join("")
-    console.log({data:obj["flightStatus"], proof:proof})
+    console.log(proofUrl, {data:obj["flightStatus"], proof:proof})
     return {data:obj["flightStatus"], proof:proof}
 }
 
