@@ -371,18 +371,17 @@ class App extends Component {
 			    </Navbar.Brand>
 			  </Navbar.Header>
 			  <Nav>
-			    <NavItem eventKey={1} href="/about">
-			      Documentation
+			    <NavItem href="/about">
+			      About
 			    </NavItem>
-
-			    <NavDropdown eventKey={2} title="Insurance Menu" id="basic-nav-dropdown">
-			      <MenuItem eventKey={2.1} href="/create_insurance"> Create Insurance </MenuItem>
-			      <MenuItem eventKey={2.2} href="/my_insurances"> My Insurances </MenuItem>
-			      <MenuItem eventKey={2.3} href="/unfunded_insurances"> My Unfunded Insurances </MenuItem>
-		              <MenuItem eventKey={2.4} href="/invest"> Invest </MenuItem>
-		              <MenuItem eventKey={2.5} href="/investements"> Investements </MenuItem>
+			    <NavDropdown title="Insurance Menu" id="basic-nav-dropdown">
+			      <MenuItem href="/create_insurance"> Create Insurance </MenuItem>
+			      <MenuItem href="/my_insurances"> My Insurances </MenuItem>
+			      <MenuItem href="/unfunded_insurances"> My Unfunded Insurances </MenuItem>
+		              <MenuItem href="/invest"> Invest </MenuItem>
+		              <MenuItem href="/investements"> My Investements </MenuItem>
 		              <MenuItem divider />
-			      <MenuItem eventKey={2.5} href="/support">Support</MenuItem>
+			      <MenuItem href="/support">Support</MenuItem>
 			    </NavDropdown>
 			  </Nav>
 			</Navbar>
@@ -395,48 +394,91 @@ class App extends Component {
 				<Route exact path ="/" render = {()=>
 					<div>
 						<Jumbotron>
-							<h1>Are you ready for a new trip?</h1>
+							<h1>Are you ready for a next trip?</h1>
 		       			    <p><strong>FlightDApp. Your personal flight insurance generator.</strong></p>
-		        			<Button bsStyle="info" bsSize="large" href="/about" >Learn more </Button>
 						</Jumbotron>
-						<Well>Welcome to decentralised Flight Insurance DApp. On this website you can create an insurance request, observe the status of your past requests and make an investement. Please select desired option in the dropdown Menu on top.</Well>
+						<Well> 
+							 <h3> Welcome to decentralised Flight Insurance DApp. </h3>
+							 <p> On this website you can create a flight insurance request to protect yourself against cancelled flights or make an investment on available requests.
+							 By using innovative TLS-N protocol it is possible to verify each request in a decentralised way, allowing our users to interact with each other without a designated centralised party.
+							 Our smart contract based on Ethereum network will take care of processing submitted requests. </p>
+
+							 <p>Please select desired option in the dropdown Menu on top.</p>
+
+							 <p><strong> Investments are processed in ether (ETH) crypto-currency </strong></p>
+						</Well>
 					</div>
 				}/>
 
-				<Route path="/create_insurance" render ={()=>
+				<Route path="/create_insurance" render = {()=>
 					<div>
+						<Well bsSize = "small">
+							<h3> Here you can create a flight insurance for yourself. </h3>
+							<p> 1) Fill in the main details of your flight such as exact time and airport code(e.g. LCY, LHR, LGW). </p>
+							<p> 2) Find your flight and select it from the available options.</p>
+							<p> 3) Fill in the sum you would like to be covered (in ETH). </p>
+							<p> 4) Select premium amount that you would pay to your investors (in ETH).
+							 It is in your interest to select higher premium, as in this case it is more likely that someone will accept your request. </p>
+						</Well>
 						<InsurancePolicyCreator addInsurance={this.addNewInsurance.bind(this)} />
 					</div>
 				}/>
 
-				<Route path="/about" render = { ()=>
+				<Route path="/about" render = {()=>
 				   <div>
 				   <Well>
 				    <h2>More Information on FlightDApp</h2>
-				    <p>This is a unique DApp which helps you to obtain a flight insurance ! </p>
-				    <p>Smart contracts written on the blockchain cannot fetch real world data and must rely on trusted, third-party oracles to request it from the desired source. Currently, these oracles must be trusted to feed the data unedited to the blockchain for use by the requesting contract.</p>
-				    <p>Having the ability to independently verify information would remove the need for trust in third parties while guaranteeing the validity of the data received over the internet. As a result, it would be possible to automatically feed this information into the blockchain ecosystem and execute contracts on the basis of it. TLS-N, an extension to the existing secure web protocol TLS, achieves this goal.</p>
-					<p>It provides a secure, non-repudiable and trivially verifiable proof about the contents (message, time-stamped) of a TLS session, and that the contents have not been tampered with. As a result, users no longer need to trust that oracles or intermediaries have not tampered with data, and can automate the execution of their contracts based on the TLS-N verification.</p>
+	
+				    <p>This decentralised application on the Ethereum test network (Rinkeby) allows users to take out insurance with other users to protect them against cancelled flights. 
+				    Using the TLS-N protocol, we allow users to verify whether flights have been cancelled or not. </p>
+				    <p> we do not have pre-set templates for policies are users are able to dictate their own policies and wait to be funded from other users.</p>
+				    <p>Having the ability to independently verify information would remove the need for trust in third parties while guaranteeing the validity of the data received over the internet.
+				     As a result, it would be possible to automatically feed this information into the blockchain ecosystem and execute contracts on the basis of it. TLS-N, an extension to the existing secure web protocol TLS, achieves this goal.</p>
+					<p>It provides a secure, non-repudiable and trivially verifiable proof about the contents (message, time-stamped) of a TLS session, and that the contents have not been tampered with. 
+					As a result, users no longer need to trust that oracles or intermediaries have not tampered with data, and can automate the execution of their contracts based on the TLS-N verification.</p>
+
+					<p><strong> Main Limitation: </strong> Using a free API for the verification of flight status limits our DApp to propose insurance contracts on flights taking place within three days.</p>
 				   </Well>
 				  </div>
 
 				}/>
 
-				<Route path="/my_insurances">
-					<InsurancePolicyList header={"Your Insurances"} actionComponent={claimButtonClass} insurances={this.state.userFilledInsurances}></InsurancePolicyList>
-				</Route>
+				<Route path="/my_insurances" render = {() =>
+					<div>
+						<Well bsSize ="small">
+							<h3> Here you can observe your submitted requests and their status</h3>
+						</Well>
+						<InsurancePolicyList header={"Your Insurances"} actionComponent={claimButtonClass} insurances={this.state.userFilledInsurances}></InsurancePolicyList>
+					</div>
+				}/>
 
-				<Route path="/unfunded_insurances">
-					<InsurancePolicyList header={"My Unfunded Insurances"} actionComponent={cancelButtonClass} insurances={this.state.userUnfilledInsurances}></InsurancePolicyList>
-				</Route>
+				<Route path="/unfunded_insurances" render = {() =>
+					<div>
+						<Well bsSize ="small">
+							<h3>Here you can observe a list of your unfunded insurances</h3>
+						</Well>
+						<InsurancePolicyList header={"My Unfunded Insurances"} actionComponent={cancelButtonClass} insurances={this.state.userUnfilledInsurances}></InsurancePolicyList>
+					</div>
+				}/>
 
-				<Route path="/invest">
-					<InsurancePolicyList header={"Invest in Insurance"} actionComponent={investComponent} insurances={this.state.availableInsurances}></InsurancePolicyList>
-				</Route>
+				<Route path="/invest" render = {() =>
+					<div>
+						<Well bsSize ="small">
+							<h3> Invest in available insurance requests< /h3>
+							<p> Here you can see a list of submitted flight insurance requests. Please select the desired option and submit your investment request</p>
+						</Well>
+						<InsurancePolicyList header={"Invest in Insurance"} actionComponent={investComponent} insurances={this.state.availableInsurances}></InsurancePolicyList>
+					</div>
+				}/>
 
-        <Route path="/investements">
-          <InsurancePolicyList header={"Your Investements in Insurance"} actionComponent={investComponent} insurances={this.state.availableInsurances}></InsurancePolicyList>
-        </Route>
+        		<Route path="/investements" render = { () =>
+        			<div>
+        				<Well bsSize ="small">
+        					<h3> Submitted Investment requests </h3>
+        				</Well>
+         			 	<InsurancePolicyList header={"Your Investements in Insurance"} actionComponent={investComponent} insurances={this.state.availableInsurances}></InsurancePolicyList>
+        			</div>	
+        		}/>
 
         <Route path="">
 
