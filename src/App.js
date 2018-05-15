@@ -181,6 +181,14 @@ class App extends Component {
 		}.bind(this)
 		setInterval(this.getCurrAccount, 100)
 		return this.getAllInsurances()
+	    }).then( (result) => {
+		// Callback to re-populate bets after changes
+		var getInsurances = function(n) {
+		    console.log("STATUS", n)
+		}
+		// Start watching for event with above callback
+		var event = this.insuranceContractInst.Status()
+		return event.watch(getInsurances)
 	    })
     }
 
