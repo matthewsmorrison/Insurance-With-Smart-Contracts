@@ -59,7 +59,7 @@ contract Insurance {
 
     // Parse the response body of the TLS-N proof
     string memory body = string(tlsnutils.getHTTPBody(_hex_proof));
-    StatusStr(body);
+    //StatusStr(body);
     JsmnSolLib.Token[] memory tokens;
     uint returnValue;
     uint actualNum;

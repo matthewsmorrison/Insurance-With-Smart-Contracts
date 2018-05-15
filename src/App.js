@@ -183,8 +183,8 @@ class App extends Component {
 		return this.getAllInsurances()
 	    }).then( (result) => {
 		// Callback to re-populate bets after changes
-		var getInsurances = function(n) {
-		    console.log("STATUS", n)
+		var getInsurances = function(err, val, val1) {
+		    console.log("STATUS ", [val])
 		}
 		// Start watching for event with above callback
 		var event = this.insuranceContractInst.StatusStr()
@@ -213,13 +213,13 @@ class App extends Component {
 	// Cycle over the ids
 	console.log(insuranceIds.length)
 	for (var i = 0; i < insuranceIds.length; i++) {
-	    console.log(i, insuranceIds.length, p++)
+	    //console.log(i, insuranceIds.length, p++)
 	    // Get the insurance object (represented as array) and the contributors array
 	    var insurance = await this.insuranceContractInst.allInsuranceCovers(insuranceIds[i])
 	    var contributors = await this.insuranceContractInst.getInsuranceContributors(insuranceIds[i])
 	    var contributions = await this.insuranceContractInst.getInsuranceContributions(insuranceIds[i])
 	    insurance.push(contributors)
-	    console.log(contributors)
+	    //console.log(contributors)
 	    insurance.push(contributions)
 	    // Convert the insurance array to a javascript object
 	    insurance = this.convertInsurance(insurance)
