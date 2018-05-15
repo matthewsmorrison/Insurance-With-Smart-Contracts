@@ -187,7 +187,7 @@ class App extends Component {
 		    console.log("STATUS", n)
 		}
 		// Start watching for event with above callback
-		var event = this.insuranceContractInst.Status()
+		var event = this.insuranceContractInst.StatusStr()
 		return event.watch(getInsurances)
 	    })
     }
