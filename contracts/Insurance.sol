@@ -38,7 +38,8 @@ contract Insurance {
   /***********************************/
 
   event InsuranceCoverChange(uint insuranceID);
-  event Status(string status);
+  event Status(int status);
+  event StatusStr(string status);
   /***********************************/
   /********* PUBLIC FUNCTIONS ********/
   /***********************************/
@@ -94,7 +95,6 @@ contract Insurance {
     InsuranceCoverChange(insuranceID);
   }
 
-
   /// @dev            Allows a user to provide capital to the contract
   /// @param  _insuranceID  The insurance ID that the user is accepting
   function acceptContract(uint _insuranceID) public payable {
@@ -138,6 +138,7 @@ contract Insurance {
 
     // Check the status
     temp = getStatus(body, tokens);
+    /* Status(temp); */
     require(temp != 1);
     // If the flight was cancelled pay out the funds to the proposer
     // Also pay the premium to the contributors
@@ -152,19 +153,19 @@ contract Insurance {
       allInsuranceCovers[_insuranceID].proposer.transfer(allInsuranceCovers[_insuranceID].totalCoverAmount);
       for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders - 1; i++) {
         premiumPayout = (allInsuranceCovers[_insuranceID].contributions[i] * allInsuranceCovers[_insuranceID].premiumAmount) / allInsuranceCovers[_insuranceID].totalCoverAmount;
-        allInsuranceCovers[_insuranceID].contributors[i].transfer(premiumPayout + allInsuranceCovers[_insuranceID].contributions[i]);
+        allInsuranceCovers[_insuranceID].contributors[i].transfer(premiumPayout);
         sum += premiumPayout;
       }
-      allInsuranceCovers[_insuranceID].contributors[i].transfer(allInsuranceCovers[_insuranceID].premiumAmount-sum + allInsuranceCovers[_insuranceID].contributions[i]);
+      allInsuranceCovers[_insuranceID].contributors[i].transfer(allInsuranceCovers[_insuranceID].premiumAmount-sum);
     }
     else {
       // the flight was not cancelled
       for (i=0; i< allInsuranceCovers[_insuranceID].numberOfProviders - 1; i++) {
         premiumPayout = (allInsuranceCovers[_insuranceID].contributions[i] * allInsuranceCovers[_insuranceID].premiumAmount) / allInsuranceCovers[_insuranceID].totalCoverAmount;
-        allInsuranceCovers[_insuranceID].contributors[i].transfer(premiumPayout);
+        allInsuranceCovers[_insuranceID].contributors[i].transfer(premiumPayout + allInsuranceCovers[_insuranceID].contributions[i]);
         sum += premiumPayout;
       }
-      allInsuranceCovers[_insuranceID].contributors[i].transfer(allInsuranceCovers[_insuranceID].premiumAmount-sum);
+      allInsuranceCovers[_insuranceID].contributors[i].transfer(allInsuranceCovers[_insuranceID].premiumAmount-sum + allInsuranceCovers[_insuranceID].contributions[i]);
     }
     allInsuranceCovers[_insuranceID].deleted = true;
   }
@@ -176,9 +177,11 @@ contract Insurance {
   function getStatus(string body, JsmnSolLib.Token[] memory tokens) private returns(int) {
     // Flight status has to be 'C' for 'cancelled'
     string memory status;
-    status = JsmnSolLib.getBytes(body, tokens[178].start, tokens[178].end);
+    status = JsmnSolLib.getBytes(body, tokens[272].start, tokens[272].end);
+    /* StatusStr(status); */
     if (compareStrings(status,'S')) return 1;
-    status = JsmnSolLib.getBytes(body, tokens[167].start, tokens[167].end);
+    status = JsmnSolLib.getBytes(body, tokens[176].start, tokens[176].end); //167
+    /* StatusStr(status); */
     if (compareStrings(status,'C')) return 2;
     else return 3;
   }
@@ -199,6 +202,7 @@ contract Insurance {
   function cancelInsuranceContract(uint _insuranceID) public payable {
       require(allInsuranceCovers[_insuranceID].proposer == msg.sender);
       require(allInsuranceCovers[_insuranceID].filled == false);
+      require(allInsuranceCovers[_insuranceID].deleted == false);
       allInsuranceCovers[_insuranceID].deleted = true;
       InsuranceCoverChange(_insuranceID);
       allInsuranceCovers[_insuranceID].proposer.transfer(allInsuranceCovers[_insuranceID].premiumAmount);
