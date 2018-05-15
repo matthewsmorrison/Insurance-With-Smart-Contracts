@@ -59,6 +59,7 @@ contract Insurance {
 
     // Parse the response body of the TLS-N proof
     string memory body = string(tlsnutils.getHTTPBody(_hex_proof));
+    StatusStr(body);
     JsmnSolLib.Token[] memory tokens;
     uint returnValue;
     uint actualNum;
@@ -121,8 +122,8 @@ contract Insurance {
   /// @param  _hex_proof      The proof with the details of the flight
   function resolveContract(uint _insuranceID, bytes memory _hex_proof) public payable {
     // Verify the TLS-N Proof
-    require(allInsuranceCovers[_insuranceID].filled);
-    require(verifyProof(_hex_proof));
+    /* require(allInsuranceCovers[_insuranceID].filled);
+    require(verifyProof(_hex_proof)); */
 
     // Parse the response body of the TLS-N proof
     string memory body = string(tlsnutils.getHTTPBody(_hex_proof));
@@ -139,12 +140,12 @@ contract Insurance {
     // Check the status
     temp = getStatus(body, tokens);
     /* Status(temp); */
-    require(temp != 1);
+    /* require(temp != 1); */
     // If the flight was cancelled pay out the funds to the proposer
     // Also pay the premium to the contributors
     // Flight status has to be 'C' for 'cancelled'
 
-    uint sum = 0;
+    /* uint sum = 0;
     uint premiumPayout;
 
     uint i;
@@ -167,7 +168,7 @@ contract Insurance {
       }
       allInsuranceCovers[_insuranceID].contributors[i].transfer(allInsuranceCovers[_insuranceID].premiumAmount-sum + allInsuranceCovers[_insuranceID].contributions[i]);
     }
-    allInsuranceCovers[_insuranceID].deleted = true;
+    allInsuranceCovers[_insuranceID].deleted = true; */
   }
 
   /// @dev                    Returns the status for the cancelling contract function
@@ -177,11 +178,13 @@ contract Insurance {
   function getStatus(string body, JsmnSolLib.Token[] memory tokens) private returns(int) {
     // Flight status has to be 'C' for 'cancelled'
     string memory status;
+    status = JsmnSolLib.getBytes(body, tokens[227].start, tokens[227].end);
+    StatusStr(status);
     status = JsmnSolLib.getBytes(body, tokens[272].start, tokens[272].end);
-    /* StatusStr(status); */
+    StatusStr(status);
     if (compareStrings(status,'S')) return 1;
     status = JsmnSolLib.getBytes(body, tokens[176].start, tokens[176].end); //167
-    /* StatusStr(status); */
+    StatusStr(status);
     if (compareStrings(status,'C')) return 2;
     else return 3;
   }
