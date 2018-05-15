@@ -67,7 +67,7 @@ contract Insurance {
     // Check that the flight has not already occurred
     // Flight status has to be 'S' for 'scheduled'
     string memory status = JsmnSolLib.getBytes(body, tokens[227].start, tokens[227].end);
-    /* Status(status); */
+    StatusStr(status);
     require(compareStrings(status,'S'));
 
     // Then get the flight ID
