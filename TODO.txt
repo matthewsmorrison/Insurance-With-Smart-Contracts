@@ -1,1 +1,0 @@
-Need to work out why a mapping cannot be added to the insurance contract (i.e. the address of a contributor and the corresponding amount they have given)
