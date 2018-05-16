@@ -2,8 +2,7 @@ import React, { Component } from 'react'
 import Insurance from '../build/contracts/Insurance.json'
 import getWeb3 from './utils/getWeb3'
 import * as flights from './flights.js'
-
-
+import { IndexLinkContainer, LinkContainer } from 'react-router-bootstrap';
 import {Jumbotron, Button, Navbar, Nav, NavItem, MenuItem, NavDropdown, Well}  from 'react-bootstrap'
 import {Switch, Route, Link} from 'react-router-dom'
 import { Icon } from 'react-icons-kit'
@@ -373,9 +372,7 @@ class App extends Component {
 			    </Navbar.Brand>
 			  </Navbar.Header>
 			  <Nav>
-			    <NavItem href="/about">
-			      About
-			    </NavItem>
+			    <NavItem href="/about">About</NavItem>
 			    <NavDropdown title="Insurance Menu" id="basic-nav-dropdown">
 			      <MenuItem href="/create_insurance"> Create Insurance </MenuItem>
 			      <MenuItem href="/my_insurances"> My Insurances </MenuItem>
