@@ -54,6 +54,7 @@
     "react-bootstrap": "^0.32.1",
     "react-dom": "^15.4.2",
     "react-icons-kit": "^1.1.4",
+    "react-router-bootstrap": "^0.24.4",
     "react-router-dom": "^4.2.2",
     "truffle-hdwallet-provider": "0.0.3"
   },
