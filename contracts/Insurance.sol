@@ -166,6 +166,7 @@ contract Insurance {
       allInsuranceCovers[_insuranceID].contributors[i].transfer(allInsuranceCovers[_insuranceID].premiumAmount-sum + allInsuranceCovers[_insuranceID].contributions[i]);
     }
     allInsuranceCovers[_insuranceID].deleted = true;
+    InsuranceCoverChange(_insuranceID);
   }
 
   /// @dev                    Returns the status for the cancelling contract function
