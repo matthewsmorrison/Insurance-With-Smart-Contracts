@@ -10,14 +10,5 @@ export const _404 = () => (
                 </div>
             </header>
         </section>
-
-        {/* TODO: Refactor the footer */}
-        <section id="footer">
-            <div className="inner">
-                <ul className="copyright">
-                    <li>&copy; TrustBet. All rights reserved.</li>
-                </ul>
-            </div>
-        </section>
     </div>
 );

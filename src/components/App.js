@@ -4,7 +4,7 @@ import React, { Component } from 'react'
 import getWeb3 from './utils/getWeb3'
 import * as flights from './flights.js'
 import { IndexLinkContainer, LinkContainer } from 'react-router-bootstrap';
-import {Jumbotron, Button, Navbar, Nav, NavItem, MenuItem, NavDropdown, Well}  from 'react-bootstrap'
+
 import {Switch, Route, Link} from 'react-router-dom'
 import { Icon } from 'react-icons-kit'
 import { ic_flight_takeoff } from 'react-icons-kit/md/ic_flight_takeoff'
@@ -369,19 +369,10 @@ class App extends Component {
         			</div>
         		}/>
 
-        <Route path="">
+				{/* default route: page not found */}
+				<Route component={_404} />
 
-        </Route>
 
-				<Route path="/support" render = { ()=>
-					<div>
-						<Jumbotron>
-						<h1>Difficulties?</h1>
-						<p> <strong> Please contact us on the following e-mail for any questions or suggestions: </strong></p>
-						<p> <strong> nijat.bakhshaliyev17@imperial.ac.uk </strong></p>
-						</Jumbotron>
-					</div>
-				}/>
     		</Switch>
 		</div>
 

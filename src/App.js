@@ -2,14 +2,10 @@ import React, { Component } from 'react'
 import Insurance from '../build/contracts/Insurance.json'
 import getWeb3 from './utils/getWeb3'
 import * as flights from './components/flights.js'
-//import { IndexLinkContainer, LinkContainer } from 'react-router-bootstrap';
-//import {Jumbotron, Button, Navbar, Nav, NavItem, MenuItem, NavDropdown, Well}  from 'react-bootstrap'
+
 import {Switch, Route, Link} from 'react-router-dom'
-import { Icon } from 'react-icons-kit'
-import { ic_flight_takeoff } from 'react-icons-kit/md/ic_flight_takeoff'
+
 import { Home} from './templates/Home';
-
-
 import { Faq } from './templates/Faq';
 import { _404 } from './templates/Errors';
 
@@ -503,7 +499,10 @@ class App extends Component {
 						</div> 
         			</div>
         		}/>
-        		
+
+        		{/* default route: page not found */}
+				<Route component={_404} />
+
     		</Switch>
 
 	);

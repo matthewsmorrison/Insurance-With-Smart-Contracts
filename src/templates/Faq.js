@@ -28,14 +28,14 @@ export const Faq = () => (
 									This protocol is the first TLS extension that provides a secure, standardised non-repudiation mechanism. In essence, this allows anybody to become an 'oracle' service. It does this by making important additions to the existing secure TLS protocol.</p>
 
 
-                    <h3 className="major">What sports games can I bet on?</h3>
-                    <p>At the moment we only provide support for football matches witht the data provided directly from <a href="http://api.football-data.org/" target="_blank">football-data.org</a> which provides
-										football data on all major European leagues. This data is then verified by our smart contract using the TLS-N protocol.</p>
+                    <h3 className="major">How do I get a flight insurance?</h3>
+                    <p> You can create an insurance on your next flight, so in case it is canceled you can get a refund through this website. Please check the "Create Insurance" tab.
+                    After filling in all required details it will display you a list of available flights. Please select your flight, the sum you would like to get covered and the premium you are ready to pay.
+                    As long as you have metamask installed and ether on the Rinkeby test network, you will be able to submit this request. Next, you will need to wait until someone would like to accept your insurance request</p>
 
-                    <h3 className="major">How can I bet on these games?</h3>
-                    <p>As long as you have metamask installed and ether on the Rinkeby test network, you will be able to
-										bet on our sports games from the <a href="makebet.html">'Make a Bet'</a> tab. In order to get ether on the Rinkeby network
-									we would suggest following the guidlines outlined <a href="https://faucet.rinkeby.io/" target="_blank">here</a>.</p>
+                    <h3 className="major">How can I invest to an insurance request?</h3>
+                    <p> Metamask needs to be enabled and you should have some etherether on the Rinkeby test network. Please click on invest tab and choose an available flight insurance request.
+                     In order to get ether on the Rinkeby network we would suggest following the guidlines outlined <a href="https://faucet.rinkeby.io/" target="_blank">here</a>.</p>
 
                     <h3 className="major">How do I install Metamask?</h3>
                     <p>You can install Metamask from this address: <a href="https://metamask.io" target="_blank">metamask.io</a>. You then need to click
