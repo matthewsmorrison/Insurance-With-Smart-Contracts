@@ -115,7 +115,7 @@ class InsurancePolicyCreator extends Component {
 		<p>I will pay a premium of:</p>
 		<input style={{width:"120px", margin:"0px 20px 0px 0px"}} onChange={(e) => {this.setPremium(e.target.value)} }></input>
 		<p style={{display:"inline-block"}}>{this.state.premium}</p>
-		{this.state.flight ? <button style={{display:"block"}} onClick={() => this.props.addInsurance(this.state.premium, this.state.cover, this.state.flight)}>Add Insurance Policy On Flight Number {this.state.flight.flightNumber}</button> : null
+		{this.state.flight ? <button style={{display:"block"}} onClick={() => this.props.addInsurance(this.state.premium, this.state.cover, this.state.flight)}>Add Insurance Policy On Flight Number {this.state.flight.flightNumber}</button> : null}
 		</div>
 	    </div>
 	)
